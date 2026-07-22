@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\TrajetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
