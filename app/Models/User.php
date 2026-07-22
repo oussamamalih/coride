@@ -16,7 +16,14 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
-
+    protected $fillable = [
+    'nom',
+    'email',
+    'password',
+    'entreprise_id',
+    'ville_residence',
+    'role',
+];
     /**
      * Get the attributes that should be cast.
      *
@@ -29,4 +36,18 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function entreprise()
+{
+    return $this->belongsTo(Entreprise::class);
+}
+
+public function trajets()
+{
+    return $this->hasMany(Trajet::class,'conducteur_id');
+}
+
+public function reservations()
+{
+    return $this->hasMany(Reservation::class,'passager_id');
+}
 }
