@@ -20,6 +20,7 @@
         <th>Passager</th>
         <th>Statut</th>
         <th>Date</th>
+        <th>Actions</th>
 
     </tr>
 
@@ -70,6 +71,20 @@
 
             {{ $reservation->date_reservation->format('d/m/Y') }}
 
+        </td>
+
+        <td>
+            @if(in_array($reservation->statut, ['en_attente', 'confirmee']))
+            <form action="{{ route('reservations.destroy',$reservation) }}" method="POST" class="d-inline">
+                @csrf
+                @method('DELETE')
+                <button
+                    onclick="return confirm('Annuler cette réservation ?')"
+                    class="btn btn-outline-danger btn-sm">
+                    Annuler
+                </button>
+            </form>
+            @endif
         </td>
 
     </tr>

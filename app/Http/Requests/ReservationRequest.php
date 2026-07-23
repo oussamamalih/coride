@@ -12,7 +12,7 @@ class ReservationRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +24,6 @@ class ReservationRequest extends FormRequest
 {
     return [
         'trajet_id' => 'required|exists:trajets,id',
-        'statut' => 'required|in:en_attente,confirmee,refusee,annulee',
     ];
 }
 }
