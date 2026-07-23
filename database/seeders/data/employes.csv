@@ -1,0 +1,41 @@
+id,nom,email,entreprise,ville_residence,role
+1,Othmane Benjelloun,othmane.benjelloun@mobilitech.com,MobiliTech,Bouznika,passager
+2,Fatima Zahra Idrissi,fatima.zahra.idrissi@nextbuild.com,NextBuild,Bouznika,conducteur
+3,Nouhaila Cherkaoui,nouhaila.cherkaoui@atlasdigital.com,Atlas Digital,Rabat,les deux
+4,Mariam El Amrani,mariam.elamrani@mobilitech.com,MobiliTech,Rabat,conducteur
+5,Fatima Zahra Tazi,fatima.zahra.tazi@atlasdigital.com,Atlas Digital,Rabat,les deux
+6,Hamza Cherkaoui,hamza.cherkaoui@atlasdigital.com,Atlas Digital,Casablanca,conducteur
+7,Adil Sqalli,adil.sqalli@greenlogix.com,GreenLogix,Skhirat,conducteur
+8,Nadia Cherkaoui,nadia.cherkaoui@kandiasolutions.com,Kandia Solutions,Témara,passager
+9,Karim Idrissi,karim.idrissi@greenlogix.com,GreenLogix,Rabat,conducteur
+10,Youssef Benjelloun,youssef.benjelloun@greenlogix.com,GreenLogix,Skhirat,passager
+11,Ghita Chraibi,ghita.chraibi@mobilitech.com,MobiliTech,Bouznika,passager
+12,Hind Benjelloun,hind.benjelloun@kandiasolutions.com,Kandia Solutions,Rabat,les deux
+13,Imane Ziani,imane.ziani@atlasdigital.com,Atlas Digital,Skhirat,passager
+14,Bilal Idrissi,bilal.idrissi@mobilitech.com,MobiliTech,Rabat,les deux
+15,Fatima Zahra Chraibi,fatima.zahra.chraibi@mobilitech.com,MobiliTech,Skhirat,conducteur
+16,Salma Alaoui,salma.alaoui@greenlogix.com,GreenLogix,Casablanca,les deux
+17,Khadija Fassi,khadija.fassi@greenlogix.com,GreenLogix,Témara,conducteur
+18,Nouhaila Chraibi,nouhaila.chraibi@mobilitech.com,MobiliTech,Mohammedia,les deux
+19,Nadia Tazi,nadia.tazi@nextbuild.com,NextBuild,Salé,passager
+20,Youssef Chraibi,youssef.chraibi@atlasdigital.com,Atlas Digital,Salé,les deux
+21,Rachid El Amrani,rachid.elamrani@nextbuild.com,NextBuild,Skhirat,conducteur
+22,Rachid Alaoui,rachid.alaoui@greenlogix.com,GreenLogix,Rabat,conducteur
+23,Bilal Cherkaoui,bilal.cherkaoui@greenlogix.com,GreenLogix,Salé,les deux
+24,Zineb Alaoui,zineb.alaoui@kandiasolutions.com,Kandia Solutions,Salé,passager
+25,Karim Idrissi,karim.idrissi@atlasdigital.com,Atlas Digital,Mohammedia,passager
+26,Sofia Sqalli,sofia.sqalli@kandiasolutions.com,Kandia Solutions,Mohammedia,passager
+27,Khadija Idrissi,khadija.idrissi@nextbuild.com,NextBuild,Mohammedia,passager
+28,Sara El Amrani,sara.elamrani@mobilitech.com,MobiliTech,Salé,les deux
+29,Nadia Ziani,nadia.ziani@kandiasolutions.com,Kandia Solutions,Mohammedia,conducteur
+30,Youssef Alaoui,youssef.alaoui@atlasdigital.com,Atlas Digital,Casablanca,les deux
+31,Omar Tazi,omar.tazi@mobilitech.com,MobiliTech,Bouznika,les deux
+32,Salma Ziani,salma.ziani@atlasdigital.com,Atlas Digital,Skhirat,passager
+33,Othmane Bennani,othmane.bennani@mobilitech.com,MobiliTech,Témara,passager
+34,Nadia Berrada,nadia.berrada@mobilitech.com,MobiliTech,Bouznika,les deux
+35,Omar Tazi,omar.tazi@nextbuild.com,NextBuild,Mohammedia,conducteur
+36,Othmane Chraibi,othmane.chraibi@atlasdigital.com,Atlas Digital,Mohammedia,conducteur
+37,Karim Bennani,karim.bennani@nextbuild.com,NextBuild,Mohammedia,les deux
+38,Yassine Sqalli,yassine.sqalli@greenlogix.com,GreenLogix,Casablanca,conducteur
+39,Salma Bennani,salma.bennani@greenlogix.com,GreenLogix,Salé,conducteur
+40,Fatima Zahra Sqalli,fatima.zahra.sqalli@mobilitech.com,MobiliTech,Rabat,les deux

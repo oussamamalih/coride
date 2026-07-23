@@ -15,10 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call([
+            EntrepriseSeeder::class,
+            UserSeeder::class,
+            TrajetSeeder::class,
+            ReservationSeeder::class,
+        ]);
 
+        // Compte de test pour se connecter rapidement en dev
         User::factory()->create([
-            'name' => 'Test User',
+            'nom' => 'Test User',
             'email' => 'test@example.com',
         ]);
     }

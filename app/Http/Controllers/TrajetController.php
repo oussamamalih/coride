@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\TrajetRequest;
+use App\Models\Trajet;
+
 class TrajetController extends Controller
 {
     /**
