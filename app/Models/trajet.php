@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Trajet extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'conducteur_id',
         'ville_depart',
@@ -18,34 +18,56 @@ class Trajet extends Model
         'jours_recurrence',
     ];
 
-    // Relation avec le conducteur
-    public function conducteur()
+    protected $casts = [
+        'places_disponibles' => 'integer',
+    ];
+
+    // ─── Relations ───────────────────────────────────────────────────────────
+
+    public function conducteur(): BelongsTo
     {
         return $this->belongsTo(User::class, 'conducteur_id');
     }
 
-    // Relation avec les réservations
-    public function reservations()
+    public function reservations(): HasMany
     {
-        return $this->hasMany(Reservation::class);
+        return $this->hasMany(Reservation::class, 'trajet_id');
     }
 
-    // Réservations confirmées
-    public function reservationsConfirmees()
+    public function reservationsConfirmees(): HasMany
     {
-        return $this->reservations()
+        return $this->hasMany(Reservation::class, 'trajet_id')
             ->where('statut', 'confirmee');
     }
-     protected function casts(): array
+
+    public function passagers(): BelongsToMany
     {
-    return [
-        'horaire' => 'datetime',
-    ];
+        return $this->belongsToMany(User::class, 'reservations', 'trajet_id', 'passager_id')
+            ->withPivot(['statut', 'date_reservation', 'score_compatibilite'])
+            ->withTimestamps();
     }
-    // Calcul des places restantes
-    public function placesRestantes()
+
+    // ─── Accessors ───────────────────────────────────────────────────────────
+
+    public function getPlacesRestantesAttribute(): int
     {
-        return $this->places_disponibles
-            - $this->reservationsConfirmees()->count();
+        return $this->places_disponibles - $this->reservationsConfirmees()->count();
+    }
+
+    public function getEstCompletAttribute(): bool
+    {
+        return $this->placesRestantes <= 0;
+    }
+
+    public function getHoraireFormateAttribute(): string
+    {
+        return substr($this->horaire, 0, 5);
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    public function aDesReservationsConfirmees(): bool
+    {
+        return $this->reservationsConfirmees()->exists();
     }
 }

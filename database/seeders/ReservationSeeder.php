@@ -3,37 +3,60 @@
 namespace Database\Seeders;
 
 use App\Models\Reservation;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ReservationSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $path = __DIR__.'/data/reservations.csv';
+        $reservations = [
+            [1, 25, 5, 'annulee', '2026-07-13'],
+            [2, 20, 30, 'en_attente', '2026-07-13'],
+            [3, 18, 12, 'refusee', '2026-07-17'],
+            [4, 5, 19, 'confirmee', '2026-07-13'],
+            [5, 12, 16, 'annulee', '2026-07-14'],
+            [6, 18, 33, 'en_attente', '2026-07-15'],
+            [7, 22, 28, 'en_attente', '2026-07-15'],
+            [8, 5, 14, 'en_attente', '2026-07-13'],
+            [9, 24, 27, 'refusee', '2026-07-14'],
+            [10, 10, 30, 'refusee', '2026-07-14'],
+            [11, 7, 32, 'refusee', '2026-07-18'],
+            [12, 17, 25, 'en_attente', '2026-07-15'],
+            [13, 3, 31, 'refusee', '2026-07-16'],
+            [14, 2, 1, 'confirmee', '2026-07-15'],
+            [15, 21, 14, 'annulee', '2026-07-14'],
+            [16, 14, 27, 'en_attente', '2026-07-13'],
+            [17, 3, 33, 'en_attente', '2026-07-14'],
+            [18, 12, 28, 'confirmee', '2026-07-17'],
+            [19, 14, 10, 'refusee', '2026-07-13'],
+            [20, 12, 40, 'en_attente', '2026-07-19'],
+            [21, 12, 12, 'confirmee', '2026-07-18'],
+            [22, 22, 10, 'annulee', '2026-07-15'],
+            [23, 20, 37, 'confirmee', '2026-07-14'],
+            [24, 6, 40, 'confirmee', '2026-07-19'],
+            [25, 14, 1, 'refusee', '2026-07-14'],
+            [26, 14, 40, 'confirmee', '2026-07-18'],
+            [27, 9, 11, 'en_attente', '2026-07-19'],
+            [28, 13, 3, 'annulee', '2026-07-19'],
+            [29, 8, 12, 'annulee', '2026-07-19'],
+            [30, 8, 13, 'confirmee', '2026-07-13'],
+            [31, 13, 18, 'en_attente', '2026-07-15'],
+            [32, 25, 14, 'annulee', '2026-07-15'],
+            [33, 11, 1, 'refusee', '2026-07-13'],
+            [34, 6, 28, 'en_attente', '2026-07-15'],
+            [35, 4, 31, 'refusee', '2026-07-16'],
+        ];
 
-        if (! file_exists($path)) {
-            return;
+        foreach ($reservations as [$id, $trajetId, $passagerId, $statut, $date]) {
+            Reservation::updateOrCreate(
+                ['id' => $id],
+                [
+                    'trajet_id'        => $trajetId,
+                    'passager_id'      => $passagerId,
+                    'statut'           => $statut,
+                    'date_reservation' => $date,
+                ]
+            );
         }
-
-        $handle = fopen($path, 'r');
-        $header = fgetcsv($handle);
-
-        while (($row = fgetcsv($handle)) !== false) {
-            $data = array_combine($header, $row);
-
-            $reservation = Reservation::firstOrNew(['id' => (int) $data['id']]);
-            $reservation->id = (int) $data['id'];
-            $reservation->trajet_id = (int) $data['trajet_id'];
-            $reservation->passager_id = (int) $data['passager_id'];
-            $reservation->statut = $data['statut'];
-            $reservation->date_reservation = $data['date_reservation'];
-            $reservation->save();
-        }
-
-        fclose($handle);
     }
 }

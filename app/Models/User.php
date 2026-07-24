@@ -2,52 +2,77 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
     protected $fillable = [
-    'nom',
-    'email',
-    'password',
-    'entreprise_id',
-    'ville_residence',
-    'role',
-];
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+        'name',
+        'email',
+        'password',
+        'entreprise_id',
+        'ville_residence',
+        'role',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password'          => 'hashed',
+    ];
+
+    // ─── Relations ───────────────────────────────────────────────────────────
+
+    public function entreprise(): BelongsTo
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsTo(Entreprise::class, 'entreprise_id');
     }
-    public function entreprise()
-{
-    return $this->belongsTo(Entreprise::class);
-}
 
-public function trajets()
-{
-    return $this->hasMany(Trajet::class,'conducteur_id');
-}
+    public function trajets(): HasMany
+    {
+        return $this->hasMany(Trajet::class, 'conducteur_id');
+    }
 
-public function reservations()
-{
-    return $this->hasMany(Reservation::class,'passager_id');
-}
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class, 'passager_id');
+    }
+
+    // ─── Role Helpers ────────────────────────────────────────────────────────
+
+    public function estConducteur(): bool
+    {
+        return in_array($this->role, ['conducteur', 'les_deux']);
+    }
+
+    public function estPassager(): bool
+    {
+        return in_array($this->role, ['passager', 'les_deux']);
+    }
+
+    public function getRoleLibelleAttribute(): string
+    {
+        return match ($this->role) {
+            'conducteur' => 'Conducteur',
+            'passager'   => 'Passager',
+            'les_deux'   => 'Conducteur & Passager',
+            default      => $this->role,
+        };
+    }
+
+    public function getInitialesAttribute(): string
+    {
+        $parts = explode(' ', $this->name);
+        return strtoupper(($parts[0][0] ?? '') . (end($parts)[0] ?? ''));
+    }
 }

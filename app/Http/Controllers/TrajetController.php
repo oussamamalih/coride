@@ -2,122 +2,97 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TrajetRequest;
+use App\Http\Requests\StoreTrajetRequest;
 use App\Models\Trajet;
-use App\Services\AIScoringService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TrajetController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(AIScoringService $aiService): View
+    public function index(Request $request): View
     {
-        $trajets = Trajet::with('conducteur')
-            ->latest()
-            ->paginate(10);
+        $query = Trajet::with(['conducteur.entreprise', 'reservationsConfirmees'])
+            ->withCount('reservationsConfirmees');
 
-        if (auth()->check()) {
-            foreach ($trajets as $trajet) {
-                $trajet->ai_score = $aiService->evaluateCompatibility($trajet, auth()->user());
-            }
+        if ($request->filled('ville_depart')) {
+            $query->where('ville_depart', 'like', '%' . $request->ville_depart . '%');
         }
 
-        return view('trajets.index', compact('trajets'));
+        if ($request->filled('ville_arrivee')) {
+            $query->where('ville_arrivee', 'like', '%' . $request->ville_arrivee . '%');
+        }
+
+        if ($request->filled('horaire')) {
+            $query->whereTime('horaire', '>=', $request->horaire)
+                  ->whereTime('horaire', '<=', date('H:i', strtotime($request->horaire) + 3600));
+        }
+
+        $trajets = $query->latest()->paginate(12)->withQueryString();
+
+        // Charger les réservations de l'utilisateur connecté pour connaître les scores déjà calculés
+        $mesReservations = collect();
+        if (auth()->check()) {
+            $mesReservations = auth()->user()->reservations()
+                ->whereIn('trajet_id', $trajets->pluck('id'))
+                ->get()
+                ->keyBy('trajet_id');
+        }
+
+        $villes = Trajet::selectRaw('DISTINCT ville_depart')->pluck('ville_depart')
+            ->merge(Trajet::selectRaw('DISTINCT ville_arrivee')->pluck('ville_arrivee'))
+            ->unique()->sort()->values();
+
+        return view('trajets.index', compact('trajets', 'mesReservations', 'villes'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
+        abort_unless(auth()->user()->estConducteur(), 403, 'Vous n\'êtes pas conducteur.');
         return view('trajets.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(TrajetRequest $request): RedirectResponse
+    public function store(StoreTrajetRequest $request): RedirectResponse
     {
-        Trajet::create([
+        $trajet = Trajet::create([
             ...$request->validated(),
             'conducteur_id' => auth()->id(),
         ]);
 
         return redirect()
-            ->route('trajets.index')
-            ->with('success', 'Trajet ajouté avec succès.');
+            ->route('trajets.show', $trajet)
+            ->with('success', 'Votre trajet a été publié avec succès !');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Trajet $trajet, AIScoringService $aiService): View
+    public function show(Trajet $trajet): View
     {
-        $trajet->load(['conducteur', 'reservations.passager']);
+        $trajet->load(['conducteur.entreprise', 'reservations.passager.entreprise']);
 
+        $maReservation = null;
         if (auth()->check()) {
-            $trajet->ai_score = $aiService->evaluateCompatibility($trajet, auth()->user());
+            $maReservation = $trajet->reservations
+                ->where('passager_id', auth()->id())
+                ->first();
         }
 
-        return view('trajets.show', compact('trajet'));
+        $placesRestantes = $trajet->places_disponibles
+            - $trajet->reservations->where('statut', 'confirmee')->count();
+
+        return view('trajets.show', compact('trajet', 'maReservation', 'placesRestantes'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Trajet $trajet): View
-    {
-        if ($trajet->conducteur_id !== auth()->id()) {
-            abort(403, 'Accès non autorisé.');
-        }
-
-        return view('trajets.edit', compact('trajet'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(TrajetRequest $request, Trajet $trajet): RedirectResponse
-    {
-        if ($trajet->conducteur_id !== auth()->id()) {
-            abort(403, 'Accès non autorisé.');
-        }
-
-        $trajet->update($request->validated());
-
-        return redirect()
-            ->route('trajets.index')
-            ->with('success', 'Trajet modifié avec succès.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Trajet $trajet): RedirectResponse
     {
-        if ($trajet->conducteur_id !== auth()->id()) {
-            abort(403, 'Accès non autorisé.');
-        }
+        abort_unless($trajet->conducteur_id === auth()->id(), 403);
 
-        if ($trajet->reservations()
-            ->where('statut', 'confirmee')
-            ->exists()) {
-
-            return redirect()
-                ->back()
-                ->with(
-                    'error',
-                    'Impossible de supprimer un trajet ayant des réservations confirmées.'
-                );
+        if ($trajet->aDesReservationsConfirmees()) {
+            return back()->with('error', 'Impossible de supprimer ce trajet : il a des réservations confirmées.');
         }
 
         $trajet->delete();
 
         return redirect()
-            ->route('trajets.index')
+            ->route('conducteur.dashboard')
             ->with('success', 'Trajet supprimé avec succès.');
     }
 }
