@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Entreprise;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -15,43 +14,35 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function create(): View
     {
-        $entreprises = Entreprise::all();
-
-        return view('auth.register', compact('entreprises'));
+        return view('auth.register');
     }
 
-    /**
-     * Handle an incoming registration request.
-     */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'nom' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'entreprise_id' => ['required', 'exists:entreprises,id'],
-            'ville_residence' => ['required', 'string', 'max:255'],
-            'role' => ['required', 'in:conducteur,passager,les_deux'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'name'             => ['required', 'string', 'max:255'],
+            'email'            => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'password'         => ['required', 'confirmed', Rules\Password::defaults()],
+            'entreprise_id'    => ['required', 'exists:entreprises,id'],
+            'ville_residence'  => ['required', 'string', 'max:100'],
+            'role'             => ['required', 'in:conducteur,passager,les_deux'],
         ]);
 
         $user = User::create([
-            'nom' => $request->nom,
-            'email' => $request->email,
-            'entreprise_id' => $request->entreprise_id,
-            'ville_residence' => $request->ville_residence,
-            'role' => $request->role,
-            'password' => Hash::make($request->password),
+            'name'             => $request->name,
+            'email'            => $request->email,
+            'password'         => Hash::make($request->password),
+            'entreprise_id'    => $request->entreprise_id,
+            'ville_residence'  => $request->ville_residence,
+            'role'             => $request->role,
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect()->route('dashboard');
+        return redirect(route('dashboard', absolute: false));
     }
 }

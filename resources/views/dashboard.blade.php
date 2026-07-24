@@ -1,60 +1,67 @@
 @extends('layouts.app')
+@section('title', 'Mon tableau de bord')
 
 @section('content')
-
-<div>
-    <div class="glass-panel" style="margin-bottom: 32px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: white;">
-        <h2 style="font-size: 2rem; margin-bottom: 12px;">👋 Bonjour {{ auth()->user()->nom }}</h2>
-        <p style="font-size: 1.1rem; opacity: 0.9; margin: 0;">
-            Bienvenue sur <strong>CoRide</strong>, votre plateforme de covoiturage d'entreprise.
-            Gérez vos trajets, consultez vos réservations et trouvez les trajets les plus compatibles grâce à l'IA.
-        </p>
+<div class="container" style="max-width:900px;">
+    <div class="fade-in" style="margin-bottom:2rem;">
+        <h1 class="page-title">Bienvenue, {{ auth()->user()->name }} 👋</h1>
+        <p style="color:var(--cr-muted);margin-top:.3rem;">{{ auth()->user()->entreprise?->nom }} · {{ auth()->user()->ville_residence }} · {{ auth()->user()->role_libelle }}</p>
     </div>
 
-    <div class="grid" style="margin-bottom: 40px;">
-        <div class="glass-panel" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
-            <div style="font-size: 3rem;">🚗</div>
-            <h3>Trajets</h3>
-            <p style="color: var(--text-muted-light);">Publiez un trajet ou consultez les trajets disponibles.</p>
-            <a href="{{ route('trajets.index') }}" class="btn btn-primary" style="width: 100%;">Voir les trajets</a>
-        </div>
-
-        <div class="glass-panel" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
-            <div style="font-size: 3rem;">📅</div>
-            <h3>Réservations</h3>
-            <p style="color: var(--text-muted-light);">Consultez et gérez toutes vos réservations.</p>
-            <a href="{{ route('reservations.index') }}" class="btn btn-success" style="width: 100%;">Mes réservations</a>
-        </div>
-
-        <div class="glass-panel" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
-            <div style="font-size: 3rem;">🤖</div>
-            <h3>Compatibilité IA</h3>
-            <p style="color: var(--text-muted-light);">Les meilleurs trajets classés selon leur score IA.</p>
-            <button class="btn btn-secondary" style="width: 100%;" disabled>Active</button>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="glass-panel">
-            <h3 style="margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-dark);">Informations du compte</h3>
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div><strong>Nom :</strong> {{ auth()->user()->nom }}</div>
-                <div><strong>Email :</strong> {{ auth()->user()->email }}</div>
-                <div><strong>Ville :</strong> {{ auth()->user()->ville_residence }}</div>
-                <div><strong>Rôle :</strong> <span class="badge badge-primary">{{ ucfirst(str_replace('_', ' ', auth()->user()->role)) }}</span></div>
+    <div class="grid-2">
+        @if(auth()->user()->estPassager())
+        <a href="{{ route('trajets.index') }}" style="text-decoration:none;">
+            <div class="glass fade-in" style="padding:2rem;text-align:center;transition:all .2s;animation-delay:.05s;cursor:pointer;"
+                 onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='var(--cr-indigo)'"
+                 onmouseout="this.style.transform='none';this.style.borderColor='rgba(99,102,241,.25)'">
+                <div style="font-size:3rem;margin-bottom:1rem;">🗺️</div>
+                <h2 style="font-size:1.1rem;font-weight:700;margin:0 0 .5rem;">Explorer les trajets</h2>
+                <p style="color:var(--cr-muted);font-size:.85rem;margin:0;">Trouvez un trajet compatible et obtenez votre score IA</p>
             </div>
-        </div>
+        </a>
+        <a href="{{ route('reservations.index') }}" style="text-decoration:none;">
+            <div class="glass fade-in" style="padding:2rem;text-align:center;transition:all .2s;animation-delay:.1s;cursor:pointer;"
+                 onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='var(--cr-emerald)'"
+                 onmouseout="this.style.transform='none';this.style.borderColor='rgba(99,102,241,.25)'">
+                <div style="font-size:3rem;margin-bottom:1rem;">🎫</div>
+                <h2 style="font-size:1.1rem;font-weight:700;margin:0 0 .5rem;">Mes réservations</h2>
+                <p style="color:var(--cr-muted);font-size:.85rem;margin:0;">Suivez vos demandes et scores de compatibilité</p>
+            </div>
+        </a>
+        @endif
+        @if(auth()->user()->estConducteur())
+        <a href="{{ route('conducteur.dashboard') }}" style="text-decoration:none;">
+            <div class="glass fade-in" style="padding:2rem;text-align:center;transition:all .2s;animation-delay:.15s;cursor:pointer;"
+                 onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='var(--cr-indigo)'"
+                 onmouseout="this.style.transform='none';this.style.borderColor='rgba(99,102,241,.25)'">
+                <div style="font-size:3rem;margin-bottom:1rem;">🚗</div>
+                <h2 style="font-size:1.1rem;font-weight:700;margin:0 0 .5rem;">Dashboard conducteur</h2>
+                <p style="color:var(--cr-muted);font-size:.85rem;margin:0;">Gérez vos trajets et confirmez les réservations</p>
+            </div>
+        </a>
+        <a href="{{ route('trajets.create') }}" style="text-decoration:none;">
+            <div class="glass fade-in" style="padding:2rem;text-align:center;transition:all .2s;animation-delay:.2s;cursor:pointer;border-color:rgba(99,102,241,.5);"
+                 onmouseover="this.style.transform='translateY(-4px)';this.style.background='rgba(99,102,241,.15)'"
+                 onmouseout="this.style.transform='none';this.style.background='var(--cr-glass)'">
+                <div style="font-size:3rem;margin-bottom:1rem;">➕</div>
+                <h2 style="font-size:1.1rem;font-weight:700;margin:0 0 .5rem;color:var(--cr-indigo);">Publier un trajet</h2>
+                <p style="color:var(--cr-muted);font-size:.85rem;margin:0;">Proposez vos places à vos collègues</p>
+            </div>
+        </a>
+        @endif
+    </div>
 
-        <div class="glass-panel">
-            <h3 style="margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-dark);">Fonctionnalités</h3>
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div style="display: flex; align-items: center; gap: 8px;">✅ Gestion des trajets</div>
-                <div style="display: flex; align-items: center; gap: 8px;">✅ Gestion des réservations</div>
-                <div style="display: flex; align-items: center; gap: 8px;">✅ Authentification Laravel Breeze</div>
-                <div style="display: flex; align-items: center; gap: 8px;">✅ Score de compatibilité IA</div>
+    {{-- IA info block --}}
+    <div class="glass fade-in" style="padding:1.5rem;margin-top:2rem;animation-delay:.3s;border-color:rgba(99,102,241,.4);">
+        <div style="display:flex;gap:1rem;align-items:flex-start;">
+            <div style="font-size:2rem;flex-shrink:0;">🤖</div>
+            <div>
+                <h3 style="margin:0 0 .5rem;font-size:.95rem;font-weight:700;">Score IA de compatibilité</h3>
+                <p style="color:var(--cr-muted);font-size:.85rem;margin:0;line-height:1.6;">
+                    CoRide utilise l'IA (via <strong style="color:var(--cr-indigo);">laravel/ai</strong>) pour analyser la compatibilité réelle entre votre profil et un trajet : proximité géographique, horaires, jours de récurrence, même entreprise. Le résultat est un score 0–100 expliqué en langage naturel — bien au-delà d'un simple filtre par ville.
+                </p>
             </div>
         </div>
     </div>
 </div>
-
 @endsection
