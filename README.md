@@ -47,12 +47,13 @@ Coride is a corporate carpooling and ride-sharing platform built with Laravel. I
    npm install
    npm run build
    ```
-
+  
 3. **Database Seeding (Optional)**
    To populate the database with initial dummy data (such as dummy Companies and Employees):
    ```bash
    php artisan db:seed
    ```
+
 
 4. **Start the Development Server**
    Start the Laravel backend and Vite frontend server in a single command:
