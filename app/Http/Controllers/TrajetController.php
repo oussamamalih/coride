@@ -2,25 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Http\Requests\TrajetRequest;
 use App\Models\Trajet;
+use App\Services\AIScoringService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class TrajetController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-{
-    $trajets = Trajet::with('conducteur')->latest()->paginate(10);
-    return view('trajets.index', compact('trajets'));
-}
+    public function index(AIScoringService $aiService): View
+    {
+        $trajets = Trajet::with('conducteur')
+            ->latest()
+            ->paginate(10);
+
+        if (auth()->check()) {
+            foreach ($trajets as $trajet) {
+                $trajet->ai_score = $aiService->evaluateCompatibility($trajet, auth()->user());
+            }
+        }
+
+        return view('trajets.index', compact('trajets'));
+    }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): View
     {
         return view('trajets.create');
     }
@@ -28,66 +39,85 @@ class TrajetController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(TrajetRequest $request)
-{
-    Trajet::create([
-        'conducteur_id' => auth()->id(),
-        'ville_depart' => $request->ville_depart,
-        'ville_arrivee' => $request->ville_arrivee,
-        'horaire' => $request->horaire,
-        'places_disponibles' => $request->places_disponibles,
-        'jours_recurrence' => $request->jours_recurrence,
-    ]);
+    public function store(TrajetRequest $request): RedirectResponse
+    {
+        Trajet::create([
+            ...$request->validated(),
+            'conducteur_id' => auth()->id(),
+        ]);
 
-    return redirect()->route('trajets.index')
-        ->with('success', 'Trajet ajouté avec succès.');
-}
+        return redirect()
+            ->route('trajets.index')
+            ->with('success', 'Trajet ajouté avec succès.');
+    }
 
     /**
      * Display the specified resource.
      */
-    public function show(Trajet $trajet)
+    public function show(Trajet $trajet, AIScoringService $aiService): View
     {
-    return view('trajets.show', compact('trajet'));
-   }
+        $trajet->load(['conducteur', 'reservations.passager']);
+
+        if (auth()->check()) {
+            $trajet->ai_score = $aiService->evaluateCompatibility($trajet, auth()->user());
+        }
+
+        return view('trajets.show', compact('trajet'));
+    }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Trajet $trajet)
+    public function edit(Trajet $trajet): View
     {
-    return view('trajets.edit', compact('trajet'));
+        if ($trajet->conducteur_id !== auth()->id()) {
+            abort(403, 'Accès non autorisé.');
+        }
+
+        return view('trajets.edit', compact('trajet'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(TrajetRequest $request, Trajet $trajet)
+    public function update(TrajetRequest $request, Trajet $trajet): RedirectResponse
     {
-    $trajet->update($request->validated());
+        if ($trajet->conducteur_id !== auth()->id()) {
+            abort(403, 'Accès non autorisé.');
+        }
 
-    return redirect()->route('trajets.index')
-        ->with('success', 'Trajet modifié avec succès.');
+        $trajet->update($request->validated());
+
+        return redirect()
+            ->route('trajets.index')
+            ->with('success', 'Trajet modifié avec succès.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Trajet $trajet)
+    public function destroy(Trajet $trajet): RedirectResponse
     {
-    if ($trajet->reservations()
-        ->where('statut', 'confirmee')
-        ->exists()) {
+        if ($trajet->conducteur_id !== auth()->id()) {
+            abort(403, 'Accès non autorisé.');
+        }
 
-        return back()->with(
-            'error',
-            'Impossible de supprimer un trajet ayant des réservations confirmées.'
-        );
-    }
+        if ($trajet->reservations()
+            ->where('statut', 'confirmee')
+            ->exists()) {
 
-    $trajet->delete();
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'Impossible de supprimer un trajet ayant des réservations confirmées.'
+                );
+        }
 
-    return redirect()->route('trajets.index')
-        ->with('success', 'Trajet supprimé.');
+        $trajet->delete();
+
+        return redirect()
+            ->route('trajets.index')
+            ->with('success', 'Trajet supprimé avec succès.');
     }
 }

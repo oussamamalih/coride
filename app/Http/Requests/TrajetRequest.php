@@ -23,10 +23,10 @@ class TrajetRequest extends FormRequest
     public function rules(): array
 {
     return [
-        'ville_depart' => 'required|string|max:255',
-        'ville_arrivee' => 'required|string|max:255',
-        'horaire' => 'required|date',
-        'places_disponibles' => 'required|integer|min:1',
+        'ville_depart' => 'required|string|max:100',
+        'ville_arrivee' => 'required|string|max:100|different:ville_depart',
+        'horaire' => 'required|date|after:now',
+        'places_disponibles' => 'required|integer|min:1|max:8',
         'jours_recurrence' => 'nullable|string|max:255',
     ];
 }
