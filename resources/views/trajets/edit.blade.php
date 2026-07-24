@@ -2,61 +2,62 @@
 
 @section('content')
 
-<h2>Modifier un trajet</h2>
+<div style="max-width: 800px; margin: 0 auto;">
 
-<form action="{{ route('trajets.update',$trajet) }}" method="POST">
+    <div class="glass-panel" style="padding: 0; overflow: hidden;">
+        <div style="background: var(--warning, #f59e0b); color: white; padding: 24px;">
+            <h3 style="margin: 0;">✏️ Modifier un trajet</h3>
+        </div>
 
-    @csrf
-    @method('PUT')
+        <div style="padding: 32px;">
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <ul style="margin: 0; padding-left: 20px;">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-    <div class="mb-3">
-        <label>Ville de départ</label>
-        <input type="text"
-               class="form-control"
-               name="ville_depart"
-               value="{{ old('ville_depart',$trajet->ville_depart) }}">
+            <form action="{{ route('trajets.update', $trajet) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div class="form-group">
+                        <label class="form-label">📍 Ville de départ</label>
+                        <input type="text" name="ville_depart" class="form-control" value="{{ old('ville_depart', $trajet->ville_depart) }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">🏁 Ville d'arrivée</label>
+                        <input type="text" name="ville_arrivee" class="form-control" value="{{ old('ville_arrivee', $trajet->ville_arrivee) }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">🕒 Horaire</label>
+                        <input type="datetime-local" name="horaire" class="form-control" value="{{ old('horaire', $trajet->horaire->format('Y-m-d\TH:i')) }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">💺 Places disponibles</label>
+                        <input type="number" name="places_disponibles" class="form-control" value="{{ old('places_disponibles', $trajet->places_disponibles) }}" min="1" max="8" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 24px;">
+                    <label class="form-label">📅 Jours de récurrence</label>
+                    <input type="text" name="jours_recurrence" class="form-control" value="{{ old('jours_recurrence', $trajet->jours_recurrence) }}" placeholder="Ex : Lundi, Mardi, Jeudi">
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-top: 32px;">
+                    <a href="{{ route('trajets.index') }}" class="btn btn-outline">← Retour</a>
+                    <button type="submit" class="btn btn-secondary">💾 Enregistrer les modifications</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label>Ville d'arrivée</label>
-        <input type="text"
-               class="form-control"
-               name="ville_arrivee"
-               value="{{ old('ville_arrivee',$trajet->ville_arrivee) }}">
-    </div>
-
-    <div class="mb-3">
-        <label>Horaire</label>
-        <input type="datetime-local"
-               class="form-control"
-               name="horaire"
-               value="{{ $trajet->horaire->format('Y-m-d\TH:i') }}">
-    </div>
-
-    <div class="mb-3">
-        <label>Places disponibles</label>
-        <input type="number"
-               class="form-control"
-               name="places_disponibles"
-               value="{{ $trajet->places_disponibles }}">
-    </div>
-
-    <div class="mb-3">
-        <label>Jours de récurrence</label>
-        <input type="text"
-               class="form-control"
-               name="jours_recurrence"
-               value="{{ $trajet->jours_recurrence }}">
-    </div>
-
-    <button class="btn btn-success">
-        Modifier
-    </button>
-
-    <a href="{{ route('trajets.index') }}" class="btn btn-secondary">
-        Retour
-    </a>
-
-</form>
+</div>
 
 @endsection

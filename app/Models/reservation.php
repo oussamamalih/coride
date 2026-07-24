@@ -19,7 +19,7 @@ class Reservation extends Model
 
     protected $casts = [
         'date_reservation' => 'datetime',
-        'resultat_ia' => 'array',
+        'resultat_ia' => \App\Casts\ResultatIACast::class,
     ];
 
     public function trajet()
