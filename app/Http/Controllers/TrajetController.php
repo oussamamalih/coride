@@ -2,97 +2,136 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreTrajetRequest;
 use App\Models\Trajet;
-use Illuminate\Http\RedirectResponse;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class TrajetController extends Controller
 {
-    public function index(Request $request): View
+    /**
+     * Affiche la liste des trajets avec possibilité de filtrage.
+     */
+    public function index(Request $request)
     {
-        $query = Trajet::with(['conducteur.entreprise', 'reservationsConfirmees'])
-            ->withCount('reservationsConfirmees');
+        $query = Trajet::with('conducteur');
 
-        if ($request->filled('ville_depart')) {
-            $query->where('ville_depart', 'like', '%' . $request->ville_depart . '%');
-        }
+        $query->when($request->filled('ville_depart'), function ($q) use ($request) {
+            return $q->where('ville_depart', 'like', '%' . $request->ville_depart . '%');
+        });
 
-        if ($request->filled('ville_arrivee')) {
-            $query->where('ville_arrivee', 'like', '%' . $request->ville_arrivee . '%');
-        }
+        $query->when($request->filled('ville_arrivee'), function ($q) use ($request) {
+            return $q->where('ville_arrivee', 'like', '%' . $request->ville_arrivee . '%');
+        });
 
-        if ($request->filled('horaire')) {
-            $query->whereTime('horaire', '>=', $request->horaire)
-                  ->whereTime('horaire', '<=', date('H:i', strtotime($request->horaire) + 3600));
-        }
+        $trajets = $query->latest()->get();
 
-        $trajets = $query->latest()->paginate(12)->withQueryString();
-
-        // Charger les réservations de l'utilisateur connecté pour connaître les scores déjà calculés
-        $mesReservations = collect();
-        if (auth()->check()) {
-            $mesReservations = auth()->user()->reservations()
-                ->whereIn('trajet_id', $trajets->pluck('id'))
-                ->get()
-                ->keyBy('trajet_id');
-        }
-
-        $villes = Trajet::selectRaw('DISTINCT ville_depart')->pluck('ville_depart')
-            ->merge(Trajet::selectRaw('DISTINCT ville_arrivee')->pluck('ville_arrivee'))
-            ->unique()->sort()->values();
-
-        return view('trajets.index', compact('trajets', 'mesReservations', 'villes'));
+        return view('trajets.index', compact('trajets'));
     }
 
-    public function create(): View
+    /**
+     * Formulaire de création d'un nouveau trajet.
+     */
+    public function create()
     {
-        abort_unless(auth()->user()->estConducteur(), 403, 'Vous n\'êtes pas conducteur.');
-        return view('trajets.create');
+        $conducteurs = User::all();
+        return view('trajets.create', compact('conducteurs'));
     }
 
-    public function store(StoreTrajetRequest $request): RedirectResponse
+    /**
+     * Enregistre un nouveau trajet dans la base de données.
+     */
+    public function store(Request $request)
     {
-        $trajet = Trajet::create([
-            ...$request->validated(),
-            'conducteur_id' => auth()->id(),
+        $validatedData = $request->validate([
+            'conducteur_id' => 'required|exists:users,id',
+            'ville_depart' => 'required|string|max:255',
+            'ville_arrivee' => 'required|string|max:255',
+            'horaire' => 'required|string',
+            'places_disponibles' => 'required|integer|min:1|max:8',
+            'jours_recurrence' => 'nullable|string|max:255',
         ]);
 
-        return redirect()
-            ->route('trajets.show', $trajet)
+        $trajet = Trajet::create($validatedData);
+
+        return redirect()->route('trajets.show', $trajet)
             ->with('success', 'Votre trajet a été publié avec succès !');
     }
 
-    public function show(Trajet $trajet): View
+    /**
+     * Affiche les détails d'un trajet spécifique.
+     */
+    public function show(Trajet $trajet)
     {
-        $trajet->load(['conducteur.entreprise', 'reservations.passager.entreprise']);
+         $trajet->load(['conducteur.entreprise', 'reservations.passager']);
 
-        $maReservation = null;
-        if (auth()->check()) {
-            $maReservation = $trajet->reservations
-                ->where('passager_id', auth()->id())
-                ->first();
-        }
+        $users = User::whereIn('role', ['passager', 'les_deux'])->get();
 
-        $placesRestantes = $trajet->places_disponibles
-            - $trajet->reservations->where('statut', 'confirmee')->count();
-
-        return view('trajets.show', compact('trajet', 'maReservation', 'placesRestantes'));
+    return view('trajets.show', compact('trajet', 'users'));
+       
     }
 
-    public function destroy(Trajet $trajet): RedirectResponse
+    /**
+     * Formulaire de modification d'un trajet (réservé au conducteur propriétaire).
+     */
+    public function edit(Trajet $trajet)
     {
-        abort_unless($trajet->conducteur_id === auth()->id(), 403);
+        $this->autoriserConducteur($trajet);
 
-        if ($trajet->aDesReservationsConfirmees()) {
-            return back()->with('error', 'Impossible de supprimer ce trajet : il a des réservations confirmées.');
+        return view('trajets.edit', compact('trajet'));
+    }
+
+    /**
+     * Met à jour un trajet existant (réservé au conducteur propriétaire).
+     */
+    public function update(Request $request, Trajet $trajet)
+    {
+        $this->autoriserConducteur($trajet);
+
+        $validatedData = $request->validate([
+            'ville_depart' => 'required|string|max:255',
+            'ville_arrivee' => 'required|string|max:255',
+            'horaire' => 'required|string',
+            'places_disponibles' => 'required|integer|min:1|max:8',
+            'jours_recurrence' => 'nullable|string|max:255',
+        ]);
+
+        $trajet->update($validatedData);
+
+        return redirect()->route('trajets.show', $trajet)
+            ->with('success', 'Le trajet a été mis à jour avec succès !');
+    }
+
+    /**
+     * Supprime un trajet (réservé au conducteur propriétaire).
+     * Règle métier : un trajet ne peut pas être supprimé s'il possède
+     * au moins une réservation confirmée.
+     */
+    public function destroy(Trajet $trajet)
+    {
+        $this->autoriserConducteur($trajet);
+
+        $aUneReservationConfirmee = $trajet->reservations()
+            ->where('statut', 'confirmee')
+            ->exists();
+
+        if ($aUneReservationConfirmee) {
+            return redirect()->route('trajets.show', $trajet)
+                ->with('error', 'Impossible de supprimer ce trajet : il possède au moins une réservation confirmée.');
         }
 
         $trajet->delete();
 
-        return redirect()
-            ->route('conducteur.dashboard')
-            ->with('success', 'Trajet supprimé avec succès.');
+        return redirect()->route('trajets.index')
+            ->with('success', 'Le trajet a été supprimé avec succès.');
+    }
+
+    /**
+     * Vérifie que l'utilisateur connecté est bien le conducteur propriétaire du trajet.
+     */
+    protected function autoriserConducteur(Trajet $trajet): void
+    {
+        if (auth()->id() !== $trajet->conducteur_id) {
+            abort(403, "Vous n'êtes pas autorisé à modifier ce trajet.");
+        }
     }
 }

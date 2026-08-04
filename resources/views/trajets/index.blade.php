@@ -1,160 +1,158 @@
-@extends('layouts.app')
-@section('title', 'Trajets disponibles')
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoRide - Trajets disponibles</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
 
-@section('content')
-<div class="container">
+    @include('partials.navbar')
 
-    {{-- ═══ Header ══════════════════════════════════════════════════════════════ --}}
-    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;" class="fade-in">
+    <div class="max-w-6xl mx-auto px-4 pb-12">
+        
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-3xl p-8 mb-10 shadow-2xl">
+
+    <div class="flex flex-col lg:flex-row justify-between items-center">
+
         <div>
-            <h1 class="page-title">Trajets disponibles</h1>
-            <p style="color:var(--cr-muted);margin-top:.3rem;">{{ $trajets->total() }} trajet{{ $trajets->total() > 1 ? 's' : '' }} trouvé{{ $trajets->total() > 1 ? 's' : '' }}</p>
+
+            <h1 class="text-4xl font-extrabold text-gray-700">
+                🚗 CoRide
+            </h1>
+
+            <p class="text-emerald-100 mt-2 text-lg">
+                Trouvez ou proposez facilement un trajet entre collègues.
+            </p>
+
         </div>
-        @auth
-            @if(auth()->user()->estConducteur())
-            <a href="{{ route('trajets.create') }}" class="btn-primary pulse">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Publier un trajet
+
+        <div class="flex gap-4 mt-6 lg:mt-0">
+
+            <a href="{{ route('trajets.create') }}"
+               class="bg-white text-emerald-700 hover:bg-gray-100 px-6 py-3 rounded-xl font-bold shadow-lg transition">
+
+                + Nouveau trajet
+
             </a>
-            @endif
-        @endauth
-    </div>
 
-    {{-- ═══ Filtres de recherche ════════════════════════════════════════════════ --}}
-    <div class="glass fade-in" style="padding:1.5rem;margin-bottom:2rem;animation-delay:.1s;">
-        <form method="GET" action="{{ route('trajets.index') }}">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:1rem;align-items:flex-end;">
-                <div>
-                    <label for="ville_depart">🏠 Ville de départ</label>
-                    <input id="ville_depart" name="ville_depart" list="villes-list" class="input"
-                           placeholder="Ex: Rabat" value="{{ request('ville_depart') }}">
-                </div>
-                <div>
-                    <label for="ville_arrivee">🏢 Ville d'arrivée</label>
-                    <input id="ville_arrivee" name="ville_arrivee" list="villes-list" class="input"
-                           placeholder="Ex: Casablanca" value="{{ request('ville_arrivee') }}">
-                </div>
-                <div>
-                    <label for="horaire">⏰ Horaire (±1h)</label>
-                    <input id="horaire" name="horaire" type="time" class="input" value="{{ request('horaire') }}">
-                </div>
-                <div style="display:flex;gap:.75rem;">
-                    <button type="submit" class="btn-primary" style="white-space:nowrap;">🔍 Rechercher</button>
-                    @if(request()->hasAny(['ville_depart','ville_arrivee','horaire']))
-                    <a href="{{ route('trajets.index') }}" class="btn-secondary" style="white-space:nowrap;">✕</a>
-                    @endif
-                </div>
+            <div class="bg-white/20 backdrop-blur-md px-6 py-3 rounded-xl text-gray-700">
+
+                <span class="block text-sm">
+                    Trajets disponibles
+                </span>
+
+                <span class="text-2xl font-bold">
+                    {{ $trajets->count() }}
+                </span>
+
             </div>
-            <datalist id="villes-list">
-                @foreach($villes as $v)<option value="{{ $v }}">@endforeach
-            </datalist>
-        </form>
+
+        </div>
+
     </div>
 
-    {{-- ═══ Grille des trajets ══════════════════════════════════════════════════ --}}
-    @if($trajets->isEmpty())
-        <div class="glass" style="padding:4rem;text-align:center;">
-            <div style="font-size:3rem;margin-bottom:1rem;">🚗</div>
-            <p style="color:var(--cr-muted);font-size:1.1rem;">Aucun trajet trouvé avec ces critères.</p>
-            <a href="{{ route('trajets.index') }}" class="btn-secondary" style="margin-top:1.5rem;display:inline-flex;">Voir tous les trajets</a>
+</div>
+                <h1 class="text-3xl font-bold text-emerald-400">🚗 CoRide</h1>
+                <p class="text-gray-400 text-sm">Plateforme de Covoiturage d'Entreprise</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="{{ route('trajets.create') }}" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-gray-800 font-bold py-3 rounded-xl transition">
+                    + Proposer un trajet
+                </a>
+                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-3 py-1.5 rounded-full font-semibold">
+                    {{ $trajets->count() }} trajet(s) trouvé(s)
+                </span>
+            </div>
         </div>
-    @else
-    <div class="grid-2" style="margin-bottom:2rem;">
-        @foreach($trajets as $i => $trajet)
-        @php
-            $maRes = $mesReservations->get($trajet->id);
-            $score = $maRes?->score_compatibilite;
-            $placesRestantes = $trajet->places_disponibles - $trajet->reservations_confirmees_count;
-            $estComplet = $placesRestantes <= 0;
-        @endphp
-        <div class="glass fade-in" style="padding:1.5rem;transition:transform .2s,box-shadow .2s;animation-delay:{{ $i * 0.05 }}s;"
-             onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 40px rgba(99,102,241,.2)'"
-             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
 
-            {{-- Header carte --}}
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem;">
-                <div style="display:flex;align-items:center;gap:.8rem;">
-                    <div class="avatar">{{ $trajet->conducteur->initiales ?? '?' }}</div>
+        <!-- Formulaire de recherche / filtrage -->
+        <form method="GET" action="{{ route('trajets.index') }}" class="bg-white rounded-3xl shadow-lg p-6 transition duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100">
+            <div>
+                <label for="ville_depart" class="block text-xs font-semibold uppercase text-gray-400 mb-1">Ville de départ</label>
+                <input type="text" name="ville_depart" id="ville_depart" value="{{ request('ville_depart') }}" placeholder="Ex: Casablanca, Rabat..." class="w-full bg-gray-50 border border-gray-700 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div>
+                <label for="ville_arrivee" class="block text-xs font-semibold uppercase text-gray-400 mb-1">Ville d'arrivée</label>
+                <input type="text" name="ville_arrivee" id="ville_arrivee" value="{{ request('ville_arrivee') }}" placeholder="Ex: Technopolis, Bouskoura..." class="w-full bg-gray-50 border border-gray-700 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="flex items-end gap-2">
+                <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-gray-800 font-bold py-3 rounded-xl transition">
+                    🔍 Rechercher
+                </button>
+                @if(request()->hasAny(['ville_depart', 'ville_arrivee']))
+                    <a href="{{ route('trajets.index') }}" class="bg-gray-700 hover:bg-gray-600 text-gray-200 py-2 px-4 rounded-lg transition">
+                        Réinitialiser
+                    </a>
+                @endif
+            </div>
+        </form>
+
+        <h2 class="text-xl font-semibold mb-6 text-gray-200">Trajets disponibles</h2>
+
+        <!-- Liste des Trajets -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @forelse($trajets as $trajet)
+                <div class="bg-white border border-gray-700/60 rounded-xl p-6 shadow-lg hover:border-emerald-500/50 transition flex flex-col justify-between">
+                    
                     <div>
-                        <div style="font-weight:600;font-size:.9rem;">{{ $trajet->conducteur->name }}</div>
-                        <div style="font-size:.75rem;color:var(--cr-muted);">{{ $trajet->conducteur->entreprise?->nom ?? '—' }}</div>
-                    </div>
-                </div>
-                {{-- Score badge ou ring --}}
-                @if($score)
-                    @php $couleur = match(true){ $score->score>=80 => '#10b981', $score->score>=60 => '#f59e0b', $score->score>=40 => '#f97316', default => '#ef4444' }; @endphp
-                    <div title="{{ $score->justification }}" style="cursor:help;">
-                        <div class="score-ring" style="width:52px;height:52px;">
-                            <svg width="52" height="52" viewBox="0 0 52 52">
-                                <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="5"/>
-                                <circle cx="26" cy="26" r="22" fill="none" stroke="{{ $couleur }}" stroke-width="5"
-                                    stroke-dasharray="{{ round(2*3.14159*22*$score->score/100) }} {{ round(2*3.14159*22) }}"
-                                    stroke-linecap="round" style="transition:stroke-dasharray 1s;"/>
-                            </svg>
-                            <span class="score-value" style="color:{{ $couleur }};font-size:.9rem;">{{ $score->score }}</span>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Départ</span>
+                                <h3 class="text-lg font-bold text-gray-700">{{ $trajet->ville_depart }}</h3>
+                            </div>
+                            <span class="text-gray-500 font-bold">➔</span>
+                            <div class="text-right">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Arrivée</span>
+                                <h3 class="text-lg font-bold text-gray-700">{{ $trajet->ville_arrivee }}</h3>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 border-t border-gray-700/50 pt-4 text-sm text-gray-600">
+                            <div class="flex justify-between"
+                                <span class="text-gray-400">🕒 Horaire :</span>
+                                <span class="font-semibold text-gray-700">{{ $trajet->horaire }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">👤 Conducteur :</span>
+                                <span class="font-semibold text-gray-700">{{ $trajet->conducteur->name ?? 'Inconnu' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">🪑 Places dispo :</span>
+                                <span class="font-semibold px-2 py-0.5 text-xs rounded {{ $trajet->places_disponibles > 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300' }}">
+                                    {{ $trajet->places_disponibles }} place(s)
+                                </span>
+                            </div>
+                            @if($trajet->jours_recurrence)
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">🔄 Jours :</span>
+                                    <span class="text-xs text-gray-400">{{ $trajet->jours_recurrence }}</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
-                @else
-                    <div style="width:52px;height:52px;border-radius:50%;border:2px dashed var(--cr-border);display:flex;align-items:center;justify-content:center;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cr-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+
+                    <!-- Bouton Voir le trajet -->
+                    <div class="mt-4 pt-3 border-t border-gray-700/50 flex justify-end">
+                        <a href="{{ route('trajets.show',$trajet) }} " class="w-full text-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-xl font-semibold transition">
+
+                            Voir le trajet →
+
+                        </a>
                     </div>
-                @endif
-            </div>
 
-            {{-- Itinéraire --}}
-            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;background:rgba(255,255,255,.04);border-radius:.6rem;padding:.85rem 1rem;">
-                <div style="text-align:center;">
-                    <div style="font-size:.7rem;color:var(--cr-muted);text-transform:uppercase;letter-spacing:.06em;">Départ</div>
-                    <div style="font-weight:700;font-size:1rem;">{{ $trajet->ville_depart }}</div>
                 </div>
-                <div style="flex:1;display:flex;align-items:center;gap:.5rem;">
-                    <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--cr-indigo),var(--cr-emerald));opacity:.5;"></div>
-                    <div style="background:var(--cr-indigo);color:#fff;padding:.2rem .6rem;border-radius:2rem;font-size:.78rem;font-weight:700;white-space:nowrap;">{{ $trajet->horaire_formate }}</div>
-                    <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--cr-emerald),var(--cr-indigo));opacity:.5;"></div>
+            @empty
+                <div class="col-span-full text-center py-12 text-gray-500">
+                    Aucun trajet ne correspond à vos critères de recherche.
                 </div>
-                <div style="text-align:center;">
-                    <div style="font-size:.7rem;color:var(--cr-muted);text-transform:uppercase;letter-spacing:.06em;">Arrivée</div>
-                    <div style="font-weight:700;font-size:1rem;">{{ $trajet->ville_arrivee }}</div>
-                </div>
-            </div>
-
-            {{-- Infos --}}
-            <div style="display:flex;gap:.75rem;margin-bottom:1.2rem;flex-wrap:wrap;">
-                <span style="font-size:.78rem;color:var(--cr-muted);display:flex;align-items:center;gap:.3rem;">
-                    📅 {{ $trajet->jours_recurrence }}
-                </span>
-                <span style="font-size:.78rem;{{ $estComplet ? 'color:#ef4444' : 'color:var(--cr-emerald)' }};font-weight:600;display:flex;align-items:center;gap:.3rem;">
-                    🪑 {{ $estComplet ? 'Complet' : $placesRestantes . ' place' . ($placesRestantes > 1 ? 's' : '') }}
-                </span>
-                @if($maRes)
-                    <span class="badge badge-{{ $maRes->statut === 'en_attente' ? 'attente' : $maRes->statut }}">{{ $maRes->statut_libelle }}</span>
-                @endif
-            </div>
-
-            {{-- Actions --}}
-            <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
-                <a href="{{ route('trajets.show', $trajet) }}" class="btn-secondary" style="flex:1;justify-content:center;font-size:.85rem;">
-                    👁 Voir détail
-                </a>
-                @auth
-                    @if(auth()->user()->estPassager() && !$maRes && !$estComplet && $trajet->conducteur_id !== auth()->id())
-                    <form method="POST" action="{{ route('score.store', $trajet) }}" style="flex:1;">
-                        @csrf
-                        <button type="submit" class="btn-primary" style="width:100%;justify-content:center;font-size:.85rem;">
-                            🤖 Score IA
-                        </button>
-                    </form>
-                    @endif
-                @endauth
-            </div>
+            @endforelse
         </div>
-        @endforeach
     </div>
 
-    {{-- Pagination --}}
-    <div style="display:flex;justify-content:center;">
-        {{ $trajets->links() }}
-    </div>
-    @endif
-</div>
-@endsection
+</body>
+</html>

@@ -1,0 +1,362 @@
+﻿MOBILITECH
+CAHIER DES CHARGES
+Projet CoRide
+Plateforme intelligente de covoiturage inter-entreprises
+
+Document de référence — Version 1.0
+Juillet 2026
+Projet académique — Développement Laravel
+Table des matières
+3. Présentation de l'entreprise
+MobiliTech est une startup spécialisée dans la mobilité durable en entreprise. Sa mission consiste à concevoir des outils numériques permettant aux organisations de réduire l'empreinte carbone liée aux déplacements domicile-travail de leurs collaborateurs, tout en améliorant la qualité de vie au travail.
+Positionnée sur le marché émergent des solutions de mobilité partagée en environnement professionnel, MobiliTech développe des applications sur mesure destinées aux entreprises clientes soucieuses de leur responsabilité sociétale (RSE) et désireuses de proposer à leurs salariés des alternatives crédibles à l'autosolisme.
+Le présent projet, CoRide, constitue le produit phare de MobiliTech pour l'année en cours et vise à démontrer la capacité de la startup à intégrer des briques d'intelligence artificielle à forte valeur ajoutée dans des applications métier robustes.
+4. Contexte du projet
+Plusieurs entreprises clientes de MobiliTech ont fait remonter une problématique récurrente : la majorité de leurs employés utilisent leur véhicule personnel pour se rendre sur leur lieu de travail, alors même que de nombreux trajets se recoupent géographiquement et temporellement entre collègues.
+Cette situation résulte principalement de l'absence d'un outil dédié, simple et fiable, permettant de mettre en relation les collaborateurs souhaitant covoiturer. Les initiatives informelles (groupes de messagerie, tableurs partagés) se sont révélées peu efficaces, faute de structuration et de mécanismes de confiance entre utilisateurs.
+MobiliTech souhaite donc développer une application web dédiée, CoRide, qui centralise la proposition, la recherche et la gestion des trajets de covoiturage au sein d'un même environnement professionnel, tout en apportant une dimension différenciante grâce à l'intelligence artificielle.
+5. Problématique
+Comment concevoir une application web permettant aux employés d'une entreprise de coordonner efficacement le covoiturage entre collègues, tout en offrant aux passagers une aide à la décision intelligente, objective et explicable, pour choisir le trajet le plus pertinent parmi les propositions disponibles ?
+Cette problématique soulève plusieurs enjeux : la fiabilité de la mise en relation entre conducteurs et passagers, la maîtrise du cycle de vie des réservations, le respect strict des contraintes de capacité des véhicules, et l'intégration cohérente d'un module d'intelligence artificielle capable de justifier ses recommandations auprès de l'utilisateur final.
+6. Objectifs généraux
+Réduire le recours à l'autosolisme au sein des entreprises clientes de MobiliTech.
+Fournir un outil numérique centralisé de mise en relation entre conducteurs et passagers.
+Démontrer la faisabilité d'une intégration IA à valeur ajoutée dans une application Laravel.
+Garantir la fiabilité et l'intégrité des données relatives aux trajets et aux réservations.
+Livrer une application académique conforme aux standards professionnels de développement Laravel.
+7. Objectifs spécifiques
+Permettre à un employé de créer, modifier et supprimer un trajet en tant que conducteur.
+Permettre à un employé de rechercher un trajet correspondant à ses besoins en tant que passager.
+Mettre en œuvre un cycle de réservation complet avec statuts contrôlés (en attente, confirmée, refusée, annulée).
+Empêcher toute réservation en double d'un même trajet par un même employé.
+Garantir que le nombre de réservations confirmées ne dépasse jamais le nombre de places disponibles.
+Calculer, pour chaque recherche de trajet, un score de compatibilité IA accompagné d'une justification et d'un horaire suggéré.
+Assurer la persistance et l'affichage structuré des résultats de l'analyse IA via un Cast Eloquent personnalisé.
+8. Description complète de CoRide
+CoRide est une application web développée avec le framework Laravel, destinée aux employés des entreprises clientes de MobiliTech. Elle permet à tout employé de proposer des trajets en tant que conducteur, de rechercher des trajets disponibles en tant que passager, d'effectuer des réservations et d'en assurer le suivi jusqu'à leur confirmation ou leur clôture.
+L'application repose sur une architecture MVC classique (Modèle-Vue-Contrôleur) enrichie par une couche d'intelligence artificielle. Cette dernière n'intervient qu'au moment où un passager effectue une recherche de trajet : elle analyse les trajets disponibles et produit, pour chacun, un score de compatibilité compris entre 0 et 100, accompagné d'une justification textuelle détaillée et d'un horaire suggéré optimisant la coordination entre le conducteur et le passager.
+Le conducteur, quant à lui, ne bénéficie pas de cette analyse : son rôle se limite à la publication et à la gestion de ses trajets ainsi qu'au traitement des demandes de réservation reçues. Cette asymétrie fonctionnelle reflète le positionnement du score IA comme un outil d'aide à la décision pour le passager, seul acteur confronté à un choix parmi plusieurs trajets concurrents.
+9. Public cible
+Employés d'entreprises clientes de MobiliTech, disposant d'une adresse email professionnelle.
+Conducteurs occasionnels ou réguliers effectuant le trajet domicile-travail en véhicule personnel.
+Passagers souhaitant limiter l'usage de leur propre véhicule ou ne disposant pas de moyen de transport individuel.
+Services RH et RSE des entreprises clientes, utilisateurs indirects des indicateurs de mobilité durable générés par l'usage de l'application.
+10. Parties prenantes
+Partie prenante
+Rôle dans le projet
+MobiliTech
+Maîtrise d'ouvrage — porteur du projet et éditeur de l'application
+Équipe de développement
+Maîtrise d'œuvre — conception, développement et tests de CoRide
+Entreprises clientes
+Structures utilisatrices déployant CoRide auprès de leurs employés
+Employés conducteurs
+Utilisateurs proposant des trajets
+Employés passagers
+Utilisateurs recherchant et réservant des trajets
+Encadrement académique
+Évaluateur du projet dans le cadre de la formation
+11. Analyse des besoins fonctionnels
+Les besoins fonctionnels de CoRide couvrent quatre grands domaines : la gestion des comptes et de l'authentification, la gestion des trajets, la gestion des réservations, et l'analyse par intelligence artificielle. Chacun de ces domaines fait l'objet d'exigences précises détaillées ci-dessous.
+Réf.
+Besoin fonctionnel
+Acteur
+BF-01
+S'inscrire avec un email professionnel unique
+Employé
+BF-02
+Se connecter et se déconnecter de manière sécurisée
+Employé
+BF-03
+Créer un trajet (ville de départ, arrivée, horaire, places, récurrence)
+Conducteur
+BF-04
+Modifier ou supprimer un trajet dont il est propriétaire
+Conducteur
+BF-05
+Consulter la liste et le détail des trajets disponibles
+Employé
+BF-06
+Rechercher un trajet selon des critères (ville, horaire)
+Passager
+BF-07
+Obtenir un score de compatibilité IA pour chaque trajet recherché
+Passager
+BF-08
+Réserver un trajet disponible
+Passager
+BF-09
+Annuler une réservation en attente ou confirmée
+Passager
+BF-10
+Consulter ses réservations effectuées
+Passager
+BF-11
+Consulter les réservations reçues sur ses trajets
+Conducteur
+BF-12
+Confirmer ou refuser une réservation reçue
+Conducteur
+12. Analyse des besoins non fonctionnels
+Catégorie
+Exigence
+Performance
+Temps de réponse inférieur à 2 secondes pour la consultation des listes de trajets
+Sécurité
+Authentification sécurisée via Laravel Breeze, hachage des mots de passe, protection CSRF
+Fiabilité
+Intégrité référentielle garantie à chaque suppression ou modification en base de données
+Maintenabilité
+Code structuré selon les conventions Laravel, séparation claire des responsabilités
+Portabilité
+Application accessible depuis tout navigateur moderne, compatible desktop et mobile
+Testabilité
+Couverture par des tests automatisés des règles métier critiques
+Ergonomie
+Interfaces Blade claires, cohérentes et accessibles aux utilisateurs non techniques
+Explicabilité
+Toute recommandation IA doit être accompagnée d'une justification textuelle compréhensible
+13. Hors périmètre
+Gestion de la facturation ou du partage de frais entre conducteur et passager.
+Géolocalisation en temps réel des véhicules.
+Application mobile native (iOS/Android) — seule une interface web responsive est prévue.
+Messagerie instantanée entre utilisateurs.
+Système de notation ou d'avis entre conducteurs et passagers.
+Intégration avec des services cartographiques externes pour le calcul d'itinéraires réels.
+Gestion multi-entreprises pour un même employé.
+14. Règles métier détaillées
+Employés et entreprises
+Un employé appartient à une seule entreprise et ne peut en changer sans intervention administrative.
+Chaque employé possède un email professionnel unique servant d'identifiant de connexion.
+Un employé peut cumuler les rôles de conducteur et de passager sans restriction.
+Trajets
+Un trajet appartient à un unique conducteur, propriétaire des droits de modification et de suppression.
+Un trajet comporte obligatoirement une ville de départ, une ville d'arrivée, un horaire, un nombre de places disponibles et les jours de récurrence.
+Un trajet possédant au moins une réservation confirmée ne peut pas être supprimé, afin de préserver l'engagement pris envers les passagers concernés.
+Réservations
+Une réservation relie un unique passager à un unique trajet.
+Un employé ne peut réserver qu'une seule fois le même trajet, une contrainte d'unicité étant appliquée au niveau base de données.
+Le nombre de réservations au statut confirmée ne peut jamais dépasser le nombre de places disponibles déclaré sur le trajet.
+Les transitions de statut sont strictement contrôlées : une réservation en attente peut devenir confirmée, refusée ou annulée ; une réservation confirmée peut être annulée ; une réservation refusée ou annulée est un état terminal.
+Intégrité des données
+Toute opération de suppression respecte l'intégrité référentielle : un employé, un trajet ou une réservation liés à d'autres enregistrements ne peuvent être supprimés sans traitement préalable des dépendances.
+15. Cas d'utilisation principaux
+Cas d'utilisation
+Acteur principal
+Description synthétique
+Créer un trajet
+Conducteur
+Le conducteur publie un trajet avec ses caractéristiques
+Rechercher un trajet
+Passager
+Le passager filtre les trajets et obtient un score IA pour chacun
+Réserver un trajet
+Passager
+Le passager soumet une demande de réservation sur un trajet
+Traiter une réservation
+Conducteur
+Le conducteur confirme ou refuse une demande reçue
+Annuler une réservation
+Passager
+Le passager annule une réservation en attente ou confirmée
+Consulter l'historique
+Employé
+L'employé consulte ses trajets, réservations effectuées ou reçues
+16. Parcours utilisateur
+Parcours conducteur
+Un employé se connecte à CoRide, accède à l'espace « Mes trajets » et crée un nouveau trajet en renseignant la ville de départ, la ville d'arrivée, l'horaire, le nombre de places disponibles et les jours de récurrence. Le trajet est immédiatement visible dans les résultats de recherche des passagers. Le conducteur reçoit ensuite des demandes de réservation qu'il consulte et traite en les confirmant ou en les refusant, dans la limite des places disponibles.
+Parcours passager
+Un employé passager accède à l'espace de recherche, renseigne ses critères (ville de départ, ville d'arrivée, horaire souhaité) et obtient une liste de trajets correspondants. Pour chaque trajet, CoRide affiche le score de compatibilité IA, la justification associée et l'horaire suggéré. Le passager sélectionne le trajet le plus pertinent et soumet une demande de réservation, dont il suit ensuite le statut jusqu'à confirmation, refus ou annulation.
+17. Description détaillée de chaque fonctionnalité
+Authentification
+Le module d'authentification s'appuie sur Laravel Breeze et couvre l'inscription (avec vérification de l'unicité de l'email professionnel), la connexion sécurisée et la déconnexion. Les mots de passe sont hachés selon les standards Laravel (bcrypt), et les sessions sont protégées contre les attaques CSRF.
+Gestion des trajets
+Ce module permet au conducteur de créer, modifier, consulter et supprimer ses trajets. Chaque opération de modification ou de suppression est soumise à une vérification d'autorisation garantissant qu'un employé ne peut agir que sur ses propres trajets. La suppression est en outre bloquée en présence de réservations confirmées.
+Gestion des réservations
+Ce module gère le cycle de vie complet d'une réservation, depuis sa création par le passager jusqu'à son traitement par le conducteur. Chaque changement de statut est validé par une machine à états simple, empêchant toute transition non autorisée (par exemple, une réservation refusée ne peut redevenir confirmée).
+Module d'intelligence artificielle
+Exemple concret : un passager recherche un trajet Casablanca → Rabat vers 8h00. CoRide identifie trois trajets correspondants et, pour chacun, interroge le module IA qui retourne un score (par exemple 87/100), une justification (« horaire très proche de votre recherche, trajet récurrent les jours ouvrés, faible écart géographique de prise en charge ») et un horaire suggéré (« départ conseillé à 7h55 pour optimiser la coordination avec le conducteur »).
+18. Contraintes techniques
+Framework : Laravel (dernière version stable).
+Langage serveur : PHP, respectant les standards PSR.
+Moteur de rendu des vues : Blade.
+Base de données : MySQL, avec migrations versionnées.
+Authentification : Laravel Breeze.
+Intégration IA : Laravel AI pour l'orchestration des appels au modèle d'analyse de compatibilité.
+Accès aux données : Eloquent ORM exclusivement, sans requêtes SQL brutes hors cas justifiés.
+Validation des entrées : Form Requests dédiées à chaque opération de création ou modification.
+Persistance des résultats IA : Cast Eloquent personnalisé assurant la sérialisation/désérialisation du résultat structuré.
+Jeux de données : Seeders reproductibles pour la démonstration et les tests.
+Tests : suite de tests automatisés couvrant les règles métier critiques.
+19. Architecture générale de l'application
+CoRide adopte une architecture MVC (Modèle-Vue-Contrôleur) standard proposée par Laravel. La couche Modèle regroupe les entités Eloquent (Employé, Entreprise, Trajet, Réservation) et encapsule les règles métier via des méthodes dédiées et des observateurs. La couche Contrôleur orchestre les cas d'utilisation en s'appuyant sur les Form Requests pour la validation et sur des classes de service pour la logique complexe, notamment l'appel au module IA. La couche Vue repose sur des templates Blade organisés par domaine fonctionnel.
+Le module d'intelligence artificielle est isolé dans une couche de service dédiée (par exemple un « CompatibilityScoreService »), invoquée uniquement lors d'une recherche de trajet par un passager. Ce service construit le contexte pertinent (données du trajet, préférences du passager), l'envoie au modèle via Laravel AI, puis transforme la réponse en une structure de données exploitable par l'application, persistée via un Cast personnalisé.
+20. Description des modules
+Module
+Responsabilité
+Auth
+Inscription, connexion, déconnexion, gestion de session
+Trajets
+Création, modification, suppression et consultation des trajets
+Réservations
+Cycle de vie complet des réservations et contrôle des transitions de statut
+IA / Compatibilité
+Calcul du score, génération de la justification et de l'horaire suggéré
+Administration des données
+Seeders, migrations et jeux de données de démonstration
+21. Modèle conceptuel des données (description textuelle)
+Le modèle conceptuel de données de CoRide s'articule autour de quatre entités principales : Entreprise, Employé, Trajet et Réservation.
+Entreprise (1,n) — Employé : une entreprise emploie plusieurs employés ; un employé appartient à une seule entreprise.
+Employé (1,n) — Trajet : un employé, en tant que conducteur, peut proposer plusieurs trajets ; un trajet appartient à un seul conducteur.
+Employé (1,n) — Réservation : un employé, en tant que passager, peut effectuer plusieurs réservations ; une réservation est effectuée par un seul passager.
+Trajet (1,n) — Réservation : un trajet peut recevoir plusieurs réservations ; une réservation concerne un seul trajet.
+Une contrainte d'unicité s'applique sur le couple (Trajet, Passager) afin d'empêcher qu'un même employé réserve deux fois le même trajet.
+22. Modèle logique des données (description textuelle)
+Table entreprises
+id, nom, secteur_activite, adresse, timestamps.
+Table employes
+id, entreprise_id (clé étrangère), nom, prenom, email (unique), mot_de_passe, timestamps.
+Table trajets
+id, conducteur_id (clé étrangère vers employes), ville_depart, ville_arrivee, horaire, places_disponibles, jours_recurrence, timestamps.
+Table reservations
+id, trajet_id (clé étrangère), passager_id (clé étrangère vers employes), statut (enum : en_attente, confirmee, refusee, annulee), resultat_ia (colonne castée), timestamps. Contrainte d'unicité composite sur (trajet_id, passager_id).
+23. Diagramme des relations (description)
+Le schéma relationnel peut être représenté comme suit : Entreprise se relie en un-à-plusieurs à Employé ; Employé se relie en un-à-plusieurs à Trajet (en tant que conducteur) et en un-à-plusieurs à Réservation (en tant que passager) ; Trajet se relie en un-à-plusieurs à Réservation. L'ensemble forme un graphe acyclique où Réservation constitue la table pivot entre Employé (passager) et Trajet, tout en conservant une relation directe et distincte entre Employé (conducteur) et Trajet.
+24. Description des rôles utilisateurs
+Rôle
+Description
+Permissions principales
+Conducteur
+Employé proposant un ou plusieurs trajets
+Créer, modifier, supprimer ses trajets ; traiter les réservations reçues
+Passager
+Employé recherchant un trajet
+Rechercher, consulter le score IA, réserver, annuler ses réservations
+Employé (rôle mixte)
+Employé cumulant les deux rôles
+Cumul des permissions conducteur et passager selon le contexte
+Aucun rôle administrateur distinct n'est requis dans le périmètre fonctionnel actuel ; la gestion des entreprises et des employés relève de l'exploitation des seeders en environnement académique.
+25. Description des écrans Blade
+Écran
+Contenu principal
+login.blade.php / register.blade.php
+Formulaires d'authentification fournis par Laravel Breeze
+trajets.index
+Liste des trajets disponibles avec filtres de recherche
+trajets.show
+Détail d'un trajet, avec score IA et bouton de réservation côté passager
+trajets.create / trajets.edit
+Formulaire de création ou modification d'un trajet, réservé au conducteur
+reservations.mine
+Liste des réservations effectuées par l'employé en tant que passager
+reservations.received
+Liste des réservations reçues par l'employé en tant que conducteur
+dashboard.blade.php
+Tableau de bord synthétique de l'employé
+26. Description des contrôleurs Laravel
+Contrôleur
+Responsabilité
+TrajetController
+index, show, create, store, edit, update, destroy sur les trajets
+ReservationController
+store (réservation), destroy (annulation), index (mes réservations)
+ReservationTraitementController
+confirm, refuse — traitement des réservations reçues par le conducteur
+RechercheController
+search — recherche de trajets et déclenchement de l'analyse IA
+27. Description des modèles Eloquent
+Modèle
+Relations principales
+Entreprise
+hasMany(Employe)
+Employe
+belongsTo(Entreprise), hasMany(Trajet, 'conducteur_id'), hasMany(Reservation, 'passager_id')
+Trajet
+belongsTo(Employe, 'conducteur_id'), hasMany(Reservation)
+Reservation
+belongsTo(Trajet), belongsTo(Employe, 'passager_id')
+28. Description des Form Requests
+StoreTrajetRequest / UpdateTrajetRequest : validation de la ville de départ, de la ville d'arrivée, de l'horaire, du nombre de places (entier positif) et des jours de récurrence.
+StoreReservationRequest : vérification de l'existence du trajet, de la disponibilité de places et de l'absence de réservation préexistante pour le couple (trajet, passager).
+UpdateReservationStatusRequest : validation du statut cible selon les transitions autorisées par la machine à états.
+RegisterRequest : validation de l'unicité de l'email professionnel et de la robustesse du mot de passe.
+29. Description des Seeders
+EntrepriseSeeder : génère un jeu d'entreprises clientes fictives.
+EmployeSeeder : génère des employés rattachés aux entreprises, avec emails professionnels uniques.
+TrajetSeeder : génère des trajets réalistes couvrant plusieurs villes, horaires et jours de récurrence.
+ReservationSeeder : génère des réservations dans différents statuts afin de couvrir l'ensemble des cas de test.
+30. Description des Casts
+Un Cast Eloquent personnalisé, par exemple ResultatIACast, est appliqué à la colonne resultat_ia de la table reservations (ou d'une table de cache de résultats de recherche). Ce Cast assure la conversion bidirectionnelle entre la structure JSON stockée en base de données et un objet PHP typé exposant les propriétés score, justification et horaire_suggere, garantissant ainsi un accès homogène et sécurisé au résultat de l'analyse IA depuis les contrôleurs et les vues Blade.
+31. Description de la brique IA
+La brique IA de CoRide s'appuie sur Laravel AI pour orchestrer l'appel à un modèle d'analyse capable d'évaluer la pertinence d'un trajet par rapport à la recherche formulée par un passager. Elle est invoquée exclusivement au moment de la recherche, jamais lors de la création d'un trajet par le conducteur.
+Le service dédié construit un contexte structuré à partir des données du trajet (ville de départ, ville d'arrivée, horaire, jours de récurrence) et des critères de recherche du passager, puis soumet ce contexte au modèle. La réponse est validée, normalisée puis persistée via le Cast personnalisé décrit précédemment avant d'être transmise à la vue Blade en charge de l'affichage des résultats.
+32. Explication du fonctionnement du score IA
+Le score de compatibilité, compris entre 0 et 100, reflète l'adéquation entre les critères de recherche du passager et les caractéristiques du trajet proposé. Il prend notamment en compte l'écart entre l'horaire recherché et l'horaire du trajet, la correspondance des villes de départ et d'arrivée, ainsi que la récurrence du trajet.
+La justification textuelle explicite en langage naturel les éléments ayant contribué au score attribué, afin que le passager comprenne la recommandation qui lui est faite plutôt que de se voir imposer une décision opaque. L'horaire suggéré propose, le cas échéant, un ajustement fin permettant d'optimiser la coordination entre le conducteur et le passager, sans jamais modifier l'horaire officiel du trajet publié par le conducteur.
+33. Scénarios d'utilisation
+Scénario 1 — Réservation réussie
+Un passager recherche un trajet, consulte les scores IA proposés, sélectionne le trajet le mieux noté et soumet une réservation. Le conducteur consulte la demande et la confirme, dans la limite des places disponibles. Le statut de la réservation passe de « en attente » à « confirmée ».
+Scénario 2 — Trajet complet
+Un passager tente de réserver un trajet dont le nombre de réservations confirmées a déjà atteint le nombre de places disponibles. Le système bloque la demande et informe le passager que le trajet est complet.
+Scénario 3 — Tentative de suppression bloquée
+Un conducteur tente de supprimer un trajet ayant au moins une réservation confirmée. Le système refuse l'opération et invite le conducteur à traiter au préalable les réservations concernées.
+34. Critères d'acceptation
+Un employé ne peut s'inscrire qu'avec un email professionnel unique, non déjà utilisé.
+Un conducteur ne peut modifier ou supprimer que les trajets dont il est propriétaire.
+Toute recherche de trajet par un passager déclenche l'affichage d'un score, d'une justification et d'un horaire suggéré pour chaque résultat.
+Le système refuse toute réservation excédant le nombre de places disponibles.
+Le système empêche toute double réservation d'un même trajet par un même employé.
+Le système bloque la suppression d'un trajet comportant des réservations confirmées.
+Toutes les transitions de statut de réservation respectent la machine à états définie.
+35. Gestion des erreurs
+La gestion des erreurs s'appuie sur les mécanismes natifs de Laravel : les erreurs de validation issues des Form Requests sont retournées avec des messages explicites affichés au niveau du formulaire concerné. Les erreurs métier (trajet complet, double réservation, suppression interdite) sont levées sous forme d'exceptions dédiées, interceptées et traduites en messages compréhensibles pour l'utilisateur. Les erreurs liées à l'indisponibilité éventuelle du service IA sont gérées avec un mécanisme de repli, affichant les trajets sans score plutôt que de bloquer la recherche.
+36. Sécurité
+Authentification sécurisée via Laravel Breeze, avec hachage des mots de passe (bcrypt).
+Protection contre les attaques CSRF sur l'ensemble des formulaires.
+Autorisations vérifiées via des Policies Laravel pour toute action de modification ou suppression.
+Validation systématique des entrées via les Form Requests, prévenant les injections et données malformées.
+Isolation stricte des données par entreprise, empêchant tout accès croisé entre organisations clientes.
+37. Validation des données
+Chaque opération d'écriture transite par une Form Request dédiée assurant la validation syntaxique et sémantique des données (formats, unicité, cohérence des dates et horaires, positivité du nombre de places). Les règles métier complexes, telles que la vérification de la disponibilité des places ou l'unicité de la réservation, sont contrôlées à la fois côté application et par des contraintes au niveau de la base de données, afin de garantir la cohérence des données en toute circonstance.
+38. Performances
+Les listes de trajets et de réservations sont paginées afin de limiter la charge de rendu et de requêtage. Les relations Eloquent fréquemment consultées (conducteur, réservations d'un trajet) sont chargées de manière anticipée (eager loading) pour éviter le problème des requêtes N+1. Les appels au module IA, potentiellement plus coûteux en temps de réponse, sont limités aux seules recherches actives et ne bloquent pas l'affichage initial de la liste des trajets.
+39. Plan de tests
+Type de test
+Portée
+Tests unitaires
+Règles métier isolées : unicité de réservation, contrôle des places, transitions de statut
+Tests de fonctionnalité (feature)
+Parcours complets : création de trajet, réservation, traitement conducteur
+Tests de validation
+Comportement des Form Requests face à des données invalides
+Tests d'intégration IA
+Vérification du format et de la persistance du résultat du score de compatibilité
+40. Livrables
+Code source complet de l'application CoRide (dépôt Git).
+Migrations, seeders et factories permettant de reconstituer un jeu de données de démonstration.
+Suite de tests automatisés.
+Présent cahier des charges.
+Documentation technique succincte (README) décrivant l'installation et la configuration du projet.
+41. Planning prévisionnel sur 5 jours
+Jour
+Activités prévues
+Jour 1
+Cadrage, modélisation des données, mise en place du projet Laravel et de l'authentification
+Jour 2
+Développement du module de gestion des trajets (CRUD conducteur)
+Jour 3
+Développement du module de réservations et des transitions de statut
+Jour 4
+Intégration de la brique IA (score, justification, horaire suggéré) et du Cast personnalisé
+Jour 5
+Seeders, tests automatisés, corrections et finalisation de la documentation
+42. Critères d'évaluation
+Respect des règles métier définies dans le présent cahier des charges.
+Qualité et structuration du code Laravel (modèles, contrôleurs, Form Requests, services).
+Pertinence et robustesse de l'intégration de la brique IA.
+Couverture et pertinence des tests automatisés.
+Qualité des interfaces Blade et de l'expérience utilisateur globale.
+Clarté et exhaustivité de la documentation livrée.
+43. Conclusion
+Le projet CoRide répond à un besoin concret exprimé par les entreprises clientes de MobiliTech : disposer d'un outil fiable et structuré pour organiser le covoiturage entre collègues. Au-delà de la couverture fonctionnelle classique d'une plateforme de mise en relation, CoRide se distingue par l'intégration d'une brique d'intelligence artificielle explicable, positionnée comme un véritable outil d'aide à la décision pour le passager.
+Le présent cahier des charges constitue le référentiel officiel du projet et servira de base à l'ensemble des phases de conception, de développement et d'évaluation de l'application, dans le respect des règles métier, des contraintes techniques et des standards professionnels de développement Laravel.

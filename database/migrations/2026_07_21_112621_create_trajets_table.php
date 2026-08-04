@@ -6,20 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('trajets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('conducteur_id')->constrained('users')->restrictOnDelete();
+            $table->foreignId('conducteur_id')->constrained('users')->cascadeOnDelete();
             $table->string('ville_depart');
             $table->string('ville_arrivee');
-            $table->time('horaire');
-            $table->unsignedTinyInteger('places_disponibles');
-            $table->string('jours_recurrence'); // ex: "Tous les jours" ou "Lun,Mer,Ven"
+            $table->string('horaire');
+            $table->integer('places_disponibles');
+            $table->string('jours_recurrence')->nullable();
             $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('trajets');

@@ -3,60 +3,62 @@
 namespace Database\Seeders;
 
 use App\Models\Reservation;
+use App\Models\Trajet;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class ReservationSeeder extends Seeder
 {
     public function run(): void
     {
-        $reservations = [
-            [1, 25, 5, 'annulee', '2026-07-13'],
-            [2, 20, 30, 'en_attente', '2026-07-13'],
-            [3, 18, 12, 'refusee', '2026-07-17'],
-            [4, 5, 19, 'confirmee', '2026-07-13'],
-            [5, 12, 16, 'annulee', '2026-07-14'],
-            [6, 18, 33, 'en_attente', '2026-07-15'],
-            [7, 22, 28, 'en_attente', '2026-07-15'],
-            [8, 5, 14, 'en_attente', '2026-07-13'],
-            [9, 24, 27, 'refusee', '2026-07-14'],
-            [10, 10, 30, 'refusee', '2026-07-14'],
-            [11, 7, 32, 'refusee', '2026-07-18'],
-            [12, 17, 25, 'en_attente', '2026-07-15'],
-            [13, 3, 31, 'refusee', '2026-07-16'],
-            [14, 2, 1, 'confirmee', '2026-07-15'],
-            [15, 21, 14, 'annulee', '2026-07-14'],
-            [16, 14, 27, 'en_attente', '2026-07-13'],
-            [17, 3, 33, 'en_attente', '2026-07-14'],
-            [18, 12, 28, 'confirmee', '2026-07-17'],
-            [19, 14, 10, 'refusee', '2026-07-13'],
-            [20, 12, 40, 'en_attente', '2026-07-19'],
-            [21, 12, 12, 'confirmee', '2026-07-18'],
-            [22, 22, 10, 'annulee', '2026-07-15'],
-            [23, 20, 37, 'confirmee', '2026-07-14'],
-            [24, 6, 40, 'confirmee', '2026-07-19'],
-            [25, 14, 1, 'refusee', '2026-07-14'],
-            [26, 14, 40, 'confirmee', '2026-07-18'],
-            [27, 9, 11, 'en_attente', '2026-07-19'],
-            [28, 13, 3, 'annulee', '2026-07-19'],
-            [29, 8, 12, 'annulee', '2026-07-19'],
-            [30, 8, 13, 'confirmee', '2026-07-13'],
-            [31, 13, 18, 'en_attente', '2026-07-15'],
-            [32, 25, 14, 'annulee', '2026-07-15'],
-            [33, 11, 1, 'refusee', '2026-07-13'],
-            [34, 6, 28, 'en_attente', '2026-07-15'],
-            [35, 4, 31, 'refusee', '2026-07-16'],
-        ];
+        $filePath = database_path('seeders/data/reservations.csv');
 
-        foreach ($reservations as [$id, $trajetId, $passagerId, $statut, $date]) {
-            Reservation::updateOrCreate(
-                ['id' => $id],
+        if (!file_exists($filePath)) {
+            $this->command->error("Fichier CSV introuvable : {$filePath}");
+            return;
+        }
+
+        $file = fopen($filePath, 'r');
+        $header = fgetcsv($file);
+
+        while (($row = fgetcsv($file)) !== false) {
+            if (count($row) < count($header)) {
+                continue;
+            }
+
+            $data = array_combine($header, $row);
+
+            $trajetId = (int) trim($data['trajet_id'] ?? $data['trajetid']);
+            $passagerId = (int) trim($data['passager_id'] ?? $data['passagerid']);
+
+            $rawStatut = trim($data['statut']);
+            $statut = match ($rawStatut) {
+                'enattente' => 'en_attente',
+                default => $rawStatut,
+            };
+
+            if (!Trajet::find($trajetId) || !User::find($passagerId)) {
+                continue;
+            }
+
+            Reservation::firstOrCreate(
                 [
-                    'trajet_id'        => $trajetId,
-                    'passager_id'      => $passagerId,
-                    'statut'           => $statut,
-                    'date_reservation' => $date,
+                    'trajet_id' => $trajetId,
+                    'passager_id' => $passagerId,
+                ],
+                [
+                    'statut' => $statut,
+                    'resultat_ia' => json_encode([
+                        'score' => 88,
+                        'justification' => 'Trajet très compatible : même ville de départ et horaire optimal.',
+                        'horaire_suggere' => '07:35:00',
+                    ]),
+                    'created_at' => trim($data['date_reservation'] ?? $data['datereservation'] ?? now()),
                 ]
             );
         }
+
+        fclose($file);
+        $this->command->info('✅ 35 Réservations importées depuis le CSV !');
     }
 }

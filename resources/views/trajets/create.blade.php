@@ -1,119 +1,80 @@
-@extends('layouts.app')
-@section('title', 'Publier un trajet')
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoRide - Proposer un nouveau trajet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
 
-@section('content')
-<div class="container" style="max-width:640px;">
-    <div style="margin-bottom:1.5rem;" class="fade-in">
-        <a href="{{ route('trajets.index') }}" style="color:var(--cr-indigo);text-decoration:none;font-size:.85rem;">← Retour aux trajets</a>
+    @include('partials.navbar')
+
+    <div class="max-w-2xl mx-auto px-4 pb-12">
+        <a href="{{ route('trajets.index') }}" class="inline-flex items-center text-emerald-400 hover:text-emerald-300 mb-6 transition text-sm font-semibold">
+            ← Annuler et retourner aux trajets
+        </a>
+
+        <div class="bg-gray-800 border border-gray-700/60 rounded-2xl p-8 shadow-xl">
+            <h1 class="text-2xl font-extrabold text-white mb-6 border-b border-gray-700/60 pb-4">
+                🚗 Publier un nouveau trajet
+            </h1>
+
+            <form method="POST" action="{{ route('trajets.store') }}" class="space-y-5">
+                @csrf
+
+                <div>
+                    <label for="conducteur_id" class="block text-xs font-semibold uppercase text-gray-400 mb-1">Conducteur</label>
+                    <select name="conducteur_id" id="conducteur_id" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm">
+                        <option value="">-- Sélectionner le salarié conducteur --</option>
+                        @foreach($conducteurs as $conducteur)
+                            <option value="{{ $conducteur->id }}" {{ old('conducteur_id') == $conducteur->id ? 'selected' : '' }}>
+                                {{ $conducteur->name }} ({{ $conducteur->entreprise->nom ?? 'Indépendant' }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="ville_depart" class="block text-xs font-semibold uppercase text-gray-400 mb-1">Ville de départ</label>
+                        <input type="text" name="ville_depart" id="ville_depart" value="{{ old('ville_depart') }}" required placeholder="Ex: Casablanca" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm">
+                    </div>
+
+                    <div>
+                        <label for="ville_arrivee" class="block text-xs font-semibold uppercase text-gray-400 mb-1">Ville d'arrivée</label>
+                        <input type="text" name="ville_arrivee" id="ville_arrivee" value="{{ old('ville_arrivee') }}" required placeholder="Ex: Rabat Technopolis" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="horaire" class="block text-xs font-semibold uppercase text-gray-400 mb-1">Horaire (départ)</label>
+                        <input type="text" name="horaire" id="horaire" value="{{ old('horaire', '08:00') }}" required placeholder="Ex: 08:00" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm">
+                    </div>
+
+                    <div>
+                        <label for="places_disponibles" class="block text-xs font-semibold uppercase text-gray-400 mb-1">Places disponibles</label>
+                        <input type="number" name="places_disponibles" id="places_disponibles" value="{{ old('places_disponibles', 3) }}" min="1" max="8" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="jours_recurrence" class="block text-xs font-semibold uppercase text-gray-400 mb-1">Jours de récurrence (optionnel)</label>
+                    <input type="text" name="jours_recurrence" id="jours_recurrence" value="{{ old('jours_recurrence') }}" placeholder="Ex: Lundi, Mercredi, Vendredi" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm">
+                </div>
+
+                <div class="pt-4 border-t border-gray-700/60 flex justify-end gap-3">
+                    <a href="{{ route('trajets.index') }}" class="bg-gray-700 hover:bg-gray-600 text-gray-300 font-semibold px-4 py-2 rounded-lg transition text-sm">
+                        Annuler
+                    </a>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2 rounded-lg transition shadow-md text-sm">
+                        Publier le trajet 🚀
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div class="glass fade-in" style="padding:2rem;animation-delay:.05s;">
-        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:2rem;">
-            <div style="width:2.5rem;height:2.5rem;background:linear-gradient(135deg,var(--cr-indigo),#818cf8);border-radius:.7rem;display:flex;align-items:center;justify-content:center;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-            </div>
-            <h1 class="page-title" style="font-size:1.4rem;">Publier un trajet</h1>
-        </div>
-
-        @if($errors->any())
-        <div class="alert-error" style="margin-bottom:1.5rem;">
-            <ul style="margin:0;padding-left:1.2rem;">
-                @foreach($errors->all() as $e)<li style="font-size:.88rem;">{{ $e }}</li>@endforeach
-            </ul>
-        </div>
-        @endif
-
-        <form method="POST" action="{{ route('trajets.store') }}">
-            @csrf
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;">
-                <div>
-                    <label for="ville_depart">🏠 Ville de départ *</label>
-                    <input id="ville_depart" name="ville_depart" type="text" class="input"
-                           placeholder="Ex: Rabat" value="{{ old('ville_depart', auth()->user()->ville_residence) }}"
-                           required list="villes-suggest">
-                </div>
-                <div>
-                    <label for="ville_arrivee">🏢 Ville d'arrivée *</label>
-                    <input id="ville_arrivee" name="ville_arrivee" type="text" class="input"
-                           placeholder="Ex: Casablanca" value="{{ old('ville_arrivee') }}"
-                           required list="villes-suggest">
-                </div>
-            </div>
-
-            <datalist id="villes-suggest">
-                @foreach(['Rabat','Casablanca','Salé','Témara','Skhirat','Mohammedia','Bouznika','Kénitra','Meknès','Fès'] as $v)
-                    <option value="{{ $v }}">
-                @endforeach
-            </datalist>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;">
-                <div>
-                    <label for="horaire">⏰ Horaire de départ *</label>
-                    <input id="horaire" name="horaire" type="time" class="input"
-                           value="{{ old('horaire', '08:00') }}" required>
-                </div>
-                <div>
-                    <label for="places_disponibles">🪑 Places disponibles *</label>
-                    <input id="places_disponibles" name="places_disponibles" type="number"
-                           min="1" max="8" class="input" value="{{ old('places_disponibles', 2) }}" required>
-                </div>
-            </div>
-
-            <div style="margin-bottom:1.8rem;">
-                <label>📅 Jours de récurrence *</label>
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-top:.5rem;">
-                    @php
-                        $joursOptions = [
-                            'Tous les jours'        => '🔁 Tous les jours',
-                            'Lun,Mar,Mer,Jeu,Ven'  => '💼 Semaine (Lun–Ven)',
-                            'Lun,Mer,Ven'           => 'Lun Mer Ven',
-                            'Mar,Jeu'               => 'Mar Jeu',
-                        ];
-                        $selected = old('jours_recurrence', 'Tous les jours');
-                    @endphp
-                    @foreach($joursOptions as $val => $label)
-                    <label style="cursor:pointer;margin:0;">
-                        <input type="radio" name="jours_recurrence" value="{{ $val }}"
-                               {{ $selected === $val ? 'checked' : '' }}
-                               style="display:none;" class="jour-radio" id="jour_{{ $loop->index }}">
-                        <div class="jour-option" id="jour-opt-{{ $loop->index }}"
-                             style="border:1px solid var(--cr-border);border-radius:.6rem;padding:.65rem .5rem;text-align:center;font-size:.78rem;font-weight:500;transition:all .2s;cursor:pointer;background:{{ $selected === $val ? 'rgba(99,102,241,.15)' : 'rgba(255,255,255,.03)' }};border-color:{{ $selected === $val ? 'var(--cr-indigo)' : 'var(--cr-border)' }};color:{{ $selected === $val ? 'var(--cr-indigo)' : 'var(--cr-text)' }};">
-                            {{ $label }}
-                        </div>
-                    </label>
-                    @endforeach
-                </div>
-            </div>
-
-            <div style="display:flex;gap:1rem;">
-                <button type="submit" class="btn-primary pulse" style="flex:1;justify-content:center;padding:.85rem;">
-                    🚗 Publier le trajet
-                </button>
-                <a href="{{ route('trajets.index') }}" class="btn-secondary" style="padding:.85rem 1.5rem;">Annuler</a>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-// Sélection visuelle des jours
-document.querySelectorAll('.jour-radio').forEach((radio, i) => {
-    radio.addEventListener('change', () => {
-        document.querySelectorAll('.jour-option').forEach(opt => {
-            opt.style.background = 'rgba(255,255,255,.03)';
-            opt.style.borderColor = 'var(--cr-border)';
-            opt.style.color = 'var(--cr-text)';
-        });
-        const opt = document.getElementById('jour-opt-' + i);
-        opt.style.background = 'rgba(99,102,241,.15)';
-        opt.style.borderColor = 'var(--cr-indigo)';
-        opt.style.color = 'var(--cr-indigo)';
-    });
-    document.querySelectorAll('.jour-option')[i].addEventListener('click', () => {
-        radio.checked = true;
-        radio.dispatchEvent(new Event('change'));
-    });
-});
-</script>
-@endsection
+</body>
+</html>

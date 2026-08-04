@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +12,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     protected $fillable = [
@@ -26,16 +29,17 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
-    ];
-
-    // ─── Relations ───────────────────────────────────────────────────────────
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
 
     public function entreprise(): BelongsTo
     {
-        return $this->belongsTo(Entreprise::class, 'entreprise_id');
+        return $this->belongsTo(Entreprise::class);
     }
 
     public function trajets(): HasMany
@@ -46,33 +50,5 @@ class User extends Authenticatable
     public function reservations(): HasMany
     {
         return $this->hasMany(Reservation::class, 'passager_id');
-    }
-
-    // ─── Role Helpers ────────────────────────────────────────────────────────
-
-    public function estConducteur(): bool
-    {
-        return in_array($this->role, ['conducteur', 'les_deux']);
-    }
-
-    public function estPassager(): bool
-    {
-        return in_array($this->role, ['passager', 'les_deux']);
-    }
-
-    public function getRoleLibelleAttribute(): string
-    {
-        return match ($this->role) {
-            'conducteur' => 'Conducteur',
-            'passager'   => 'Passager',
-            'les_deux'   => 'Conducteur & Passager',
-            default      => $this->role,
-        };
-    }
-
-    public function getInitialesAttribute(): string
-    {
-        $parts = explode(' ', $this->name);
-        return strtoupper(($parts[0][0] ?? '') . (end($parts)[0] ?? ''));
     }
 }

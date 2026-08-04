@@ -36,7 +36,7 @@
 
                     <div class="form-group">
                         <label class="form-label">🕒 Horaire</label>
-                        <input type="datetime-local" name="horaire" class="form-control" value="{{ old('horaire', $trajet->horaire->format('Y-m-d\TH:i')) }}" required>
+                        <input type="text" name="horaire" class="form-control" placeholder="Ex : 08:00" value="{{ old('horaire', $trajet->horaire) }}" required>
                     </div>
 
                     <div class="form-group">

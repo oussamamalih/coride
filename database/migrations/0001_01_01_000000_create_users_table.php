@@ -6,19 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('entreprise_id')->nullable()->constrained('entreprises')->nullOnDelete();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
-            // Champs CoRide (FK ajoutée après dans 2026_01_01_000004)
-            $table->unsignedBigInteger('entreprise_id')->nullable();
             $table->string('ville_residence')->nullable();
-            $table->enum('role', ['conducteur', 'passager', 'les_deux'])->default('passager');
+            $table->string('role')->default('passager');
+            $table->rememberToken();
             $table->timestamps();
         });
 
@@ -38,10 +40,13 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('sessions');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('users');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('sessions');
     }
 };

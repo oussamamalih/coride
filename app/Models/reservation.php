@@ -3,86 +3,42 @@
 namespace App\Models;
 
 use App\Casts\ScoreCompatibiliteCast;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Reservation extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'trajet_id',
         'passager_id',
         'statut',
-        'date_reservation',
-        'score_compatibilite',
+        'resultat_ia',
     ];
 
+    /**
+     * 'resultat_ia' est stocké en JSON en base et désérialisé automatiquement
+     * en objet ScoreCompatibilite (score, justification, horaire_suggere, ...).
+     */
     protected $casts = [
-        'date_reservation'   => 'date',
-        'score_compatibilite' => ScoreCompatibiliteCast::class,
+        'resultat_ia' => ScoreCompatibiliteCast::class,
     ];
 
-    // Transitions de statut autorisées
-    const TRANSITIONS = [
-        'en_attente' => ['confirmee', 'refusee', 'annulee'],
-        'confirmee'  => ['annulee'],
-        'refusee'    => [],
-        'annulee'    => [],
-    ];
-
-    // ─── Relations ───────────────────────────────────────────────────────────
-
+    /**
+     * La réservation concerne un trajet précis.
+     */
     public function trajet(): BelongsTo
     {
         return $this->belongsTo(Trajet::class, 'trajet_id');
     }
 
+    /**
+     * La réservation a été faite par un passager (User).
+     */
     public function passager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'passager_id');
-    }
-
-    // ─── Business Logic ──────────────────────────────────────────────────────
-
-    public function peutTransitionnerVers(string $nouveauStatut): bool
-    {
-        return in_array($nouveauStatut, self::TRANSITIONS[$this->statut] ?? []);
-    }
-
-    public function changerStatut(string $nouveauStatut): bool
-    {
-        if (! $this->peutTransitionnerVers($nouveauStatut)) {
-            return false;
-        }
-
-        $this->statut = $nouveauStatut;
-        $this->save();
-
-        return true;
-    }
-
-    public function getBadgeClassAttribute(): string
-    {
-        return match ($this->statut) {
-            'confirmee'  => 'badge-confirmee',
-            'refusee'    => 'badge-refusee',
-            'annulee'    => 'badge-annulee',
-            default      => 'badge-attente',
-        };
-    }
-
-    public function getStatutLibelleAttribute(): string
-    {
-        return match ($this->statut) {
-            'en_attente' => 'En attente',
-            'confirmee'  => 'Confirmée',
-            'refusee'    => 'Refusée',
-            'annulee'    => 'Annulée',
-            default      => $this->statut,
-        };
-    }
-
-    public function aUnScore(): bool
-    {
-        return ! is_null($this->score_compatibilite);
     }
 }

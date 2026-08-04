@@ -6,22 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('trajet_id')->constrained('trajets')->restrictOnDelete();
+            $table->foreignId('trajet_id')->constrained('trajets')->cascadeOnDelete();
             $table->foreignId('passager_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('statut', ['en_attente', 'confirmee', 'refusee', 'annulee'])->default('en_attente');
-            $table->date('date_reservation');
-            $table->text('score_compatibilite')->nullable(); // Cast JSON IA
+            $table->string('statut')->default('en_attente');
+            $table->json('resultat_ia')->nullable();
             $table->timestamps();
-
-            // Un passager ne peut pas réserver deux fois le même trajet
-            $table->unique(['trajet_id', 'passager_id']);
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('reservations');

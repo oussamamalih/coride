@@ -2,103 +2,117 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreReservationRequest;
 use App\Models\Reservation;
 use App\Models\Trajet;
-use Illuminate\Http\RedirectResponse;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+
+use App\Services\AiMatcher;
 
 class ReservationController extends Controller
 {
-    public function index(): View
-    {
-        $reservations = auth()->user()
-            ->reservations()
-            ->with(['trajet.conducteur.entreprise'])
-            ->latest()
-            ->paginate(10);
+    protected $aiMatcher;
 
-        return view('reservations.index', compact('reservations'));
+    public function __construct(AiMatcher $aiMatcher)
+    {
+        $this->aiMatcher = $aiMatcher;
     }
 
-    public function store(StoreReservationRequest $request): RedirectResponse
+    /**
+     * Enregistre une demande de réservation pour un trajet.
+     */
+    public function store(Request $request, Trajet $trajet)
     {
-        $trajet = Trajet::findOrFail($request->trajet_id);
-
-        // Vérifier que le passager n'est pas le conducteur
-        if ($trajet->conducteur_id === auth()->id()) {
-            return back()->with('error', 'Vous ne pouvez pas réserver votre propre trajet.');
-        }
-
-        // Vérifier les places disponibles
-        $placesConfirmees = $trajet->reservationsConfirmees()->count();
-        if ($placesConfirmees >= $trajet->places_disponibles) {
-            return back()->with('error', 'Ce trajet est complet, aucune place disponible.');
-        }
-
-        Reservation::create([
-            'trajet_id'        => $trajet->id,
-            'passager_id'      => auth()->id(),
-            'statut'           => 'en_attente',
-            'date_reservation' => now()->toDateString(),
+        $request->validate([
+            'passager_id' => 'required|exists:users,id',
         ]);
 
-        return redirect()
-            ->route('reservations.index')
-            ->with('success', 'Votre réservation a été envoyée ! En attente de confirmation du conducteur.');
+        $passager = User::findOrFail($request->passager_id);
+
+        if ($trajet->places_disponibles <= 0) {
+            return redirect()->back()->with('error', 'Désolé, ce trajet n\'a plus de places disponibles.');
+        }
+
+        if ($trajet->conducteur_id == $passager->id) {
+            return redirect()->back()->with('error', 'Vous êtes le conducteur de ce trajet !');
+        }
+
+        $dejaReserve = Reservation::where('trajet_id', $trajet->id)
+            ->where('passager_id', $passager->id)
+            ->exists();
+
+        if ($dejaReserve) {
+            return redirect()->back()->with('error', 'Vous avez déjà soumis une demande de réservation pour ce trajet.');
+        }
+
+        // Calcul dynamique via le service (retourne un objet ScoreCompatibilite)
+        $compatibilite = $this->aiMatcher->calculateCompatibility($passager, $trajet);
+
+        try {
+            Reservation::create([
+                'trajet_id' => $trajet->id,
+                'passager_id' => $passager->id,
+                'statut' => 'en_attente',
+                // Le cast ScoreCompatibiliteCast se charge de la sérialisation JSON,
+                // on lui passe directement l'objet (pas de json_encode manuel ici).
+                'resultat_ia' => $compatibilite,
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Filet de sécurité : la contrainte unique DB (trajet_id, passager_id)
+            // couvre le cas de deux requêtes concurrentes passant le check ci-dessus en même temps.
+            return redirect()->back()->with('error', 'Vous avez déjà soumis une demande de réservation pour ce trajet.');
+        }
+
+        return redirect()->back()->with('success', 'Votre demande de réservation a été enregistrée avec succès !');
     }
 
-    public function update(Request $request, Reservation $reservation): RedirectResponse
+    /**
+     * Accepte la demande de réservation.
+     */
+    public function accepter(Reservation $reservation)
     {
-        $nouveauStatut = $request->statut;
+        $trajet = $reservation->trajet;
 
-        // Le conducteur peut confirmer/refuser
-        $estConducteur = $reservation->trajet->conducteur_id === auth()->id();
-        // Le passager peut annuler
-        $estPassager = $reservation->passager_id === auth()->id();
-
-        abort_unless($estConducteur || $estPassager, 403);
-
-        // Vérifier la transition
-        if (! $reservation->peutTransitionnerVers($nouveauStatut)) {
-            return back()->with('error', 'Transition de statut non autorisée.');
+        // Vérifier si le trajet dispose encore de places libres
+        if ($trajet->places_disponibles <= 0) {
+            return redirect()->back()->with('error', 'Impossible d\'accepter : ce trajet n\'a plus de places disponibles.');
         }
 
-        // Si confirmation, vérifier qu'il reste des places
-        if ($nouveauStatut === 'confirmee') {
-            $placesRestantes = $reservation->trajet->places_disponibles
-                - $reservation->trajet->reservationsConfirmees()->count();
+        // Mettre à jour le statut de la réservation
+        $reservation->update(['statut' => 'confirmee']);
 
-            if ($placesRestantes <= 0) {
-                return back()->with('error', 'Plus de places disponibles sur ce trajet.');
-            }
-        }
+        // Décrémenter les places sur le trajet
+        $trajet->decrement('places_disponibles');
 
-        $reservation->changerStatut($nouveauStatut);
-
-        $message = match ($nouveauStatut) {
-            'confirmee' => 'Réservation confirmée.',
-            'refusee'   => 'Réservation refusée.',
-            'annulee'   => 'Réservation annulée.',
-            default     => 'Statut mis à jour.',
-        };
-
-        return back()->with('success', $message);
+        return redirect()->back()->with('success', 'La réservation a été confirmée avec succès !');
     }
 
-    public function destroy(Reservation $reservation): RedirectResponse
+    /**
+     * Refuse la demande de réservation.
+     */
+    public function refuser(Reservation $reservation)
     {
-        abort_unless($reservation->passager_id === auth()->id(), 403);
+        $reservation->update(['statut' => 'refusee']);
 
-        if (! $reservation->peutTransitionnerVers('annulee')) {
-            return back()->with('error', 'Vous ne pouvez pas annuler cette réservation.');
+        return redirect()->back()->with('success', 'La réservation a été refusée.');
+    }
+
+        /**
+     * Annule une réservation par le passager.
+     */
+    public function annuler(Reservation $reservation)
+    {
+        $trajet = $reservation->trajet;
+
+        // Si la réservation était confirmée, on libère une place sur le trajet
+        if ($reservation->statut === 'confirmee') {
+            $trajet->increment('places_disponibles');
         }
 
-        $reservation->changerStatut('annulee');
+        // Mettre à jour le statut
+        $reservation->update(['statut' => 'annulee']);
 
-        return redirect()
-            ->route('reservations.index')
-            ->with('success', 'Réservation annulée.');
+        return redirect()->back()->with('success', 'Votre demande de réservation a bien été annulée.');
     }
+
 }
